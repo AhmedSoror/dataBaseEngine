@@ -1,36 +1,51 @@
-import java.util.Collections;
+
+
 import java.util.Hashtable;
 import java.util.Vector;
 
 public class Table {
 	private String strTableName;
-	private Vector<pair> vecPairs;
 	private String strClusteringKeyColumn;
 	private Hashtable<String, String>htblColNameType;
-	
+	private Vector<Page> vecPages;
 	
 	public Table(String strTableName,String strClusteringKeyColumn,Hashtable<String, String>htblColNameType) {
-		this.strTableName=strTableName;
+		this.strTableName = strTableName;
 		this.strClusteringKeyColumn=strClusteringKeyColumn;
 		this.htblColNameType=htblColNameType;
-		vecPairs=new Vector<pair>();	
+		vecPages=new Vector<Page>();
 	}
+	
+	// inserting into the table using the clustring column
+	
 	public void insert(Hashtable<String,Object>htblColNameValue) {
-		Hashtable<String,Object>htblReturnValue=null;
-		if(htblColNameValue==null) {
-			return;
-		}
+		int pageIndex = findPage(htblColNameValue);
+		if(pageIndex!=-1)	
+			vecPages.get(pageIndex).insert(htblColNameValue);
 		else {
-			int intPageIndex=Collections.binarySearch(vecPairs,new pair(null,strClusteringKeyColumn));
-			intPageIndex=intPageIndex<0?Math.abs(intPageIndex)-1:intPageIndex;
-			htblReturnValue=vecPairs.get(intPageIndex).page.insert(htblColNameValue);
-			
+			vecPages.add(new Page());
+			vecPages.get(vecPages.size()-1).insert(htblColNameValue);
 		}
-		Collections.sort(vecPairs);
-		insert(htblReturnValue);
 	}
+	
+	public int findPage(Hashtable<String,Object>htblColNameValue) {
+		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		//for each page we get first and last elements and compare with the inserted one
+		for(int i=0;i<vecPages.size();i++) {
+			Page p =vecPages.get(i);
+			Comparable first = (Comparable) p.getVecData().get(0).get(strClusteringKeyColumn);
+			Comparable last = (Comparable) p.getVecData().get(p.getVecData().size()-1).get(strClusteringKeyColumn);
+			if((first.compareTo(clusterInserted)<=0)&&(last.compareTo(clusterInserted)>=0)) {
+				return i;	
+				}
+			}
+		return -1;
+	}
+	
 	public static void main(String[] args) {
-		String strTableName = "Student";
+
+		/*
+	 	String strTableName = "Student";
 		Hashtable htblColNameType = new Hashtable( );
 		htblColNameType.put("id", "java.lang.String");
 		htblColNameType.put("name", "java.lang.String");
@@ -53,16 +68,17 @@ public class Table {
 		t.insert(  htblColNameValue2 );
 		
 		
-		System.out.println(t.vecPairs);
 //		t.insert(htblColNameType1);
 //		t.insert(htblColNameType2);
 //		t.insert(htblColNameType3);
 //		t.insert(htblColNameType4);
 //		System.out.println(t.vecPairs);
 		
+		*/
 	}
 	
 }
+/*
 class pair implements Comparable<pair>{
 	Page page;
 	Object firstKey;
@@ -84,3 +100,4 @@ class pair implements Comparable<pair>{
 	
 }
 
+*/
