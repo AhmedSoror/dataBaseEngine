@@ -1,46 +1,143 @@
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.Vector;
 
-public class Table {
+public class Table implements Serializable {
 	private String strTableName;
 	private String strClusteringKeyColumn;
 	private Hashtable<String, String>htblColNameType;
 	private Vector<Page> vecPages;
+
 	
 	public Table(String strTableName,String strClusteringKeyColumn,Hashtable<String, String>htblColNameType) {
 		this.strTableName = strTableName;
 		this.strClusteringKeyColumn=strClusteringKeyColumn;
 		this.htblColNameType=htblColNameType;
 		vecPages=new Vector<Page>();
+
+		
+		//	Table Name, Column Name, Column Type, Key, Indexed
+		try {
+//			File file=new File("data/metadata.csv");
+//			file.createNewFile();
+			FileWriter fileWriter=new FileWriter("data/metadata.csv",true);
+			Set<String> colNames=htblColNameType.keySet();
+			for(String s :colNames) {
+				fileWriter.write(strTableName+","+s+","+htblColNameType.get(s)+","+isKey(s)+","+"False\n");
+
+			}
+//			fileWriter.flush();
+			fileWriter.close();			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public boolean isKey(String Key) {
+		return strClusteringKeyColumn.equals(Key);
+	}
+	/*
+	 *	 finding the page which contains the data if the record contains the clustringKeyColumn by comparing the first and last records
+	 *	returns the index of the required page if found else returns -1 meaning a new page should be created 
+	 */
+	
+	public int findPage(Hashtable<String,Object>htblColNameValue) {
+		/*
+		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		//for each page we get first and last elements and compare with the inserted one
+		for(int i=vecPages.size()-1;i>=0;i--) {
+			Page p =vecPages.get(i);
+			Comparable first = (Comparable) p.getVecData().get(0).get(strClusteringKeyColumn);
+			if((first.compareTo(clusterInserted)<=0)) {
+				return i;
+				}
+			}
+		return -1;
+		*/
+//		int index=-1;
+//		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
+//		for(int i=0;i<vecPages.size();i++) {
+//			Page p=vecPages.get(i);
+//			Comparable last = (Comparable) p.getRecord(p.size()-1).get(strClusteringKeyColumn);
+//			if(last.compareTo(clusterInserted)<=0) {
+//				index=i;
+//			}
+//			else {
+//				Comparable first = (Comparable) p.getRecord(0).get(strClusteringKeyColumn);
+//				if(first.compareTo(clusterInserted)<=0) {
+//					index=i;
+//				}
+//			}
+//		}
+//		return index;
+		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		for (int i=0;i<vecPages.size();i++) {
+			if(i==vecPages.size()-1) return i;
+			Comparable last = (Comparable)vecPages.get(i).getRecord(vecPages.get(i).size()-1).get(strClusteringKeyColumn);
+			if(clusterInserted.compareTo(last)<=0)return i;
+			else {
+				Comparable firstNextPage = (Comparable)vecPages.get(i+1).getRecord(0).get(strClusteringKeyColumn);
+				if(clusterInserted.compareTo(firstNextPage)<=0)return i;
+			}
+		}
+		return -1;
+		
+		
+		
 	}
 	
 	// inserting into the table using the clustring column
 	
 	public void insert(Hashtable<String,Object>htblColNameValue) {
 		int pageIndex = findPage(htblColNameValue);
-		if(pageIndex!=-1)	
-			vecPages.get(pageIndex).insert(htblColNameValue);
+		if(pageIndex!=-1) {	
+			insert_helper(pageIndex, htblColNameValue);
+		}
 		else {
-			vecPages.add(new Page());
+			vecPages.add(new Page(strClusteringKeyColumn));
 			vecPages.get(vecPages.size()-1).insert(htblColNameValue);
 		}
 	}
 	
-	public int findPage(Hashtable<String,Object>htblColNameValue) {
-		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
-		//for each page we get first and last elements and compare with the inserted one
-		for(int i=0;i<vecPages.size();i++) {
-			Page p =vecPages.get(i);
-			Comparable first = (Comparable) p.getVecData().get(0).get(strClusteringKeyColumn);
-			Comparable last = (Comparable) p.getVecData().get(p.getVecData().size()-1).get(strClusteringKeyColumn);
-			if((first.compareTo(clusterInserted)<=0)&&(last.compareTo(clusterInserted)>=0)) {
-				return i;	
-				}
-			}
-		return -1;
+	public void insert_helper(int pageIndex,Hashtable<String,Object>htblColNameValue){
+		if(htblColNameValue==null)return;
+		Hashtable<String,Object> lastRecord = null;
+		Page page 	=vecPages.get(pageIndex);
+		lastRecord =page.insert(htblColNameValue);
+		if(pageIndex==vecPages.size()-1 && lastRecord!=null)vecPages.add(new Page(strClusteringKeyColumn));
+		insert_helper(pageIndex+1, lastRecord);
 	}
+	
+	/*
+	 * delete from a table by looping through all pages and match records
+	 */
+	public void delete (Hashtable<String,Object>htblColNameValue) {
+		for(int i=vecPages.size()-1;i>=0;i--) {
+			Page page = vecPages.get(i);
+			page.delete(htblColNameValue);							// in each page delete records matching with the query
+			if (page.isEmpty())
+				vecPages.remove(page);
+		}	
+	}
+
+	public void update(String strKey,Hashtable<String,Object> htblColNameValue){
+		for(int i=vecPages.size()-1;i>=0;i--) {
+			Page page = vecPages.get(i);
+			page.update(strKey,htblColNameValue);							// in each page delete records matching with the query
+			if (page.isEmpty())
+				vecPages.remove(page);
+		}	
+	}
+	
+	
+	
+	
 	
 	public static void main(String[] args) {
 
@@ -76,28 +173,46 @@ public class Table {
 		
 		*/
 	}
-	
-}
-/*
-class pair implements Comparable<pair>{
-	Page page;
-	Object firstKey;
-	public pair(Page page,Object firstkey){
-		this.page=page;
-		this.firstKey=firstkey;
-	}
-	
-	
-	@Override
-	public int compareTo(pair pair2) {
-		// TODO Auto-generated method stub
-		return ((Comparable)(firstKey)).compareTo((Comparable)(pair2.firstKey));
-	}
-	
-	public String toString(){
-		return page.toString();
-	}
-	
-}
 
-*/
+	public String getStrTableName() {
+		return strTableName;
+	}
+
+	public void setStrTableName(String strTableName) {
+		this.strTableName = strTableName;
+	}
+
+	public String getStrClusteringKeyColumn() {
+		return strClusteringKeyColumn;
+	}
+
+	public void setStrClusteringKeyColumn(String strClusteringKeyColumn) {
+		this.strClusteringKeyColumn = strClusteringKeyColumn;
+	}
+
+	public Hashtable<String, String> getHtblColNameType() {
+		return htblColNameType;
+	}
+
+	public void setHtblColNameType(Hashtable<String, String> htblColNameType) {
+		this.htblColNameType = htblColNameType;
+	}
+
+	public Vector<Page> getVecPages() {
+		return vecPages;
+	}
+
+	public void setVecPages(Vector<Page> vecPages) {
+		this.vecPages = vecPages;
+	}
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		sb.append(strTableName+"\t"+strClusteringKeyColumn);
+//		sb.append("\t"+htblColNameType);
+		for(Page p:vecPages) {
+			sb.append(p.toString()+"\n");
+		}
+		
+		return sb.toString();
+	}
+}
