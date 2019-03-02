@@ -1,46 +1,23 @@
 
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Date;
 import java.util.Hashtable;
-import java.util.Set;
 import java.util.Vector;
 
-public class Table implements Serializable {
+public class Table {
 	private String strTableName;
 	private String strClusteringKeyColumn;
 	private Hashtable<String, String>htblColNameType;
 	private Vector<Page> vecPages;
-
 	
 	public Table(String strTableName,String strClusteringKeyColumn,Hashtable<String, String>htblColNameType) {
 		this.strTableName = strTableName;
 		this.strClusteringKeyColumn=strClusteringKeyColumn;
 		this.htblColNameType=htblColNameType;
 		vecPages=new Vector<Page>();
-
-		
-		//	Table Name, Column Name, Column Type, Key, Indexed
-		try {
-//			File file=new File("data/metadata.csv");
-//			file.createNewFile();
-			FileWriter fileWriter=new FileWriter("data/metadata.csv",true);
-			Set<String> colNames=htblColNameType.keySet();
-			for(String s :colNames) {
-				fileWriter.write(strTableName+","+s+","+htblColNameType.get(s)+","+isKey(s)+","+"False\n");
-
-			}
-//			fileWriter.flush();
-			fileWriter.close();			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	public boolean isKey(String Key) {
-		return strClusteringKeyColumn.equals(Key);
 	}
 	/*
 	 *	 finding the page which contains the data if the record contains the clustringKeyColumn by comparing the first and last records
@@ -95,6 +72,7 @@ public class Table implements Serializable {
 	// inserting into the table using the clustring column
 	
 	public void insert(Hashtable<String,Object>htblColNameValue) {
+		htblColNameValue.put("TouchDate", new Date());
 		int pageIndex = findPage(htblColNameValue);
 		if(pageIndex!=-1) {	
 			insert_helper(pageIndex, htblColNameValue);
@@ -125,19 +103,42 @@ public class Table implements Serializable {
 				vecPages.remove(page);
 		}	
 	}
+	
 
-	public void update(String strKey,Hashtable<String,Object> htblColNameValue){
+	public void update(String strKey,Hashtable<String,Object> htblColNameValue) throws Exception{
+		String s = this.getPrimaryType();
+		System.out.println(s);
+		String[] primary = s.split("#");
+		String columnType=primary[0];
+		String columnName=primary[1];
+
 		for(int i=vecPages.size()-1;i>=0;i--) {
 			Page page = vecPages.get(i);
-			page.update(strKey,htblColNameValue);							// in each page delete records matching with the query
-			if (page.isEmpty())
-				vecPages.remove(page);
+			page.update(columnType,columnName,strKey,htblColNameValue);							// in each page delete records matching with the query
 		}	
 	}
-	
-	
-	
-	
+
+	public  String getPrimaryType ()throws Exception{
+		String columnType=null;
+		String columnName=null;
+		String currentLine = "";
+//		FileReader fileReader= new FileReader("C:\\Users\\Muhammad\\Desktop\\DB\\data\\metadata.csv");
+		FileReader fileReader= new FileReader(".\\data\\metadata.csv");
+		BufferedReader br = new BufferedReader(fileReader);
+		while ((currentLine = br.readLine()) != null) {
+			String[] line =currentLine.split(",");
+			String tableName = line[0];
+			columnName = line[1];
+			columnType = line[2];
+			String primaryKey = line[3];
+			String indexed = line[4];
+			if(tableName.equals(this.strTableName)&&primaryKey.equals(" True"))
+				break;
+		}
+		return columnType+"#"+columnName;
+	}
+
+
 	
 	public static void main(String[] args) {
 

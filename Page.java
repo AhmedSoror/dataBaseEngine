@@ -1,9 +1,11 @@
 
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Vector;
@@ -14,14 +16,16 @@ public class Page implements Serializable {
 	private int intId;									// id for the page
 	private static int intSerial;						// counting serial number to determine page id 
 	private String strClusteringKeyColumn;
-	private Vector<Hashtable<String, Object>> vecData;                    
+	private Vector<Hashtable<String, Object>> vecData;     
+	private transient Hashtable<String, Object> firstRecord;
+	private transient Hashtable<String, Object> lastRecord;
 	
 	//Constructor
 	public Page(String strClusteringKeyColumn) {
 		this.vecData=new Vector<Hashtable<String, Object>>();
 		this.strClusteringKeyColumn=strClusteringKeyColumn;
 		intId=intSerial++;
-
+			
 	}
 	
 	// checking if two records are equal
@@ -38,6 +42,7 @@ public class Page implements Serializable {
 	// updating two records are equal                        /*before*/                           /*After*/
 	public static void update_helper( Hashtable<String,Object>htblRecord,  Hashtable<String,Object>htblUpdate) {
 		Set<String> colNames=htblUpdate.keySet();
+		System.out.println(colNames + "*************************************8");
 		for(String s :colNames) {
 			System.out.println(s+" "+ htblUpdate.get(s));
 				htblRecord.put(s, htblUpdate.get(s));
@@ -98,17 +103,52 @@ public class Page implements Serializable {
 	 * "static boolean recordMatching(Hashtable<String,Object>htblQuery  ,  Hashtable<String,Object>htblRecord)"
 	 * if the records match, update and continue;  (don't use for each)
 	 */
-	
-	
-	public void update(String strKey,Hashtable<String,Object>htblUpdate) {
-	for(int i=0;i<vecData.size();i++) {
-		Hashtable <String, Object> htblRecord= vecData.get(i);
-		System.out.println("herre in loop");
-		System.out.println(htblRecord.get(strKey)+"  "+htblUpdate.get(strKey));
-		if(htblRecord.get(strKey).equals(htblUpdate.get(strKey)))
-			update_helper(htblRecord,htblUpdate);
-		
-	}
+
+	public void update(String colType,String colName,String strKey,Hashtable<String,Object>htblUpdate) throws Exception{
+		int intCol ;
+		String strCol ;
+		double dblCol ;
+		boolean bolCol ;
+		Date datCol ;
+		switch(colType){
+			case " java.lang.Integer" : System.out.println("here");intCol = (Integer.parseInt(strKey));
+				for(int i=0;i<vecData.size();i++) {
+					Hashtable <String, Object> htblRecord= vecData.get(i);
+					if(htblRecord.get(colName).equals(intCol))
+						update_helper(htblRecord,htblUpdate);
+				}			
+				break;
+			case " java.lang.String" : strCol = strKey;
+				for(int i=0;i<vecData.size();i++) {
+					Hashtable <String, Object> htblRecord= vecData.get(i);
+					if(htblRecord.get(colName).equals(strCol))
+						update_helper(htblRecord,htblUpdate);
+				}
+				break;
+			case " java.lang.Double" : dblCol = (Double.parseDouble(strKey));
+			for(int i=0;i<vecData.size();i++) {
+					Hashtable <String, Object> htblRecord= vecData.get(i);
+					if(htblRecord.get(colName).equals(dblCol))
+						update_helper(htblRecord,htblUpdate);
+				}
+				break;
+			case " java.lang.Boolean" : bolCol = (Boolean.parseBoolean(strKey));
+				for(int i=0;i<vecData.size();i++) {
+					Hashtable <String, Object> htblRecord= vecData.get(i);
+					if(htblRecord.get(colName).equals(bolCol))
+						update_helper(htblRecord,htblUpdate);
+				}
+				break;
+			case " java.lang.Date" : datCol =new SimpleDateFormat("dd/MM/yyyy").parse(strKey);
+				for(int i=0;i<vecData.size();i++) {
+					Hashtable <String, Object> htblRecord= vecData.get(i);
+					if(htblRecord.get(colName).equals(datCol))
+						update_helper(htblRecord,htblUpdate);
+				}
+				break;
+		}
+
+		System.out.println("finished");
 }
 
 	
@@ -163,6 +203,14 @@ public class Page implements Serializable {
 
 	public int getIntMaxRecords() {
 		return intMaxRecords;
+	}
+
+	public Hashtable<String, Object> getFirstRecord(){
+		return firstRecord;
+	}
+	
+	public Hashtable<String, Object> getLastRecord(){
+		return lastRecord;
 	}
 	public String toString() {
 		return "\n"+intId+"\n"+vecData;

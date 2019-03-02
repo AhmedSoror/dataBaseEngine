@@ -17,6 +17,7 @@ public class DBApp {
 	public void createTable(String strTableName,String strClusteringKeyColumn,Hashtable<String,String> htblColNameType ) //	throws DBAppException
 	{	
 		Hashtable<String,String> htblColNameTypeClone=(Hashtable<String, String>)htblColNameType.clone(); 
+		htblColNameTypeClone.put("TouchDate", "java.util.Date");
 		Table newTable=new Table(strTableName, strClusteringKeyColumn, htblColNameTypeClone);				//unique table names????????????????
 		vecTables.add(newTable);		
 		System.out.println("created table \t"+this);
@@ -37,7 +38,7 @@ public class DBApp {
 		}
 //		System.out.println("inserted into table \t"+this);
 	}
-	public void updateTable(String strTableName,String strKey,Hashtable<String,Object> htblColNameValue	)//	throws DBAppException
+	public void updateTable(String strTableName,String strKey,Hashtable<String,Object> htblColNameValue	) throws Exception//	throws DBAppException
 	{		Hashtable<String,Object>htblColNameValueClone=(Hashtable<String, Object>) htblColNameValue.clone();
 		for(Table table : vecTables) {
 			if(table.getStrTableName().equals(strTableName)) {
@@ -67,21 +68,14 @@ public class DBApp {
 		return null;
 	}
 	*/
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		DBApp test=new DBApp();
 		test.init();
 		
 //		create a new table 
 		
-		String strTableName = "employee";
+		String strTableName = "Student";
 		Hashtable <String, String> htblColNameType = new Hashtable<String, String>( );
-		htblColNameType.put("id", "java.lang.Integer");
-		htblColNameType.put("name", "java.lang.String");
-		htblColNameType.put("salary", "java.lang.double");
-		test.createTable( strTableName, "id", htblColNameType );
-		
-		strTableName = "em";
-		htblColNameType = new Hashtable<String, String>( );
 		htblColNameType.put("id", "java.lang.Integer");
 		htblColNameType.put("name", "java.lang.String");
 		htblColNameType.put("gpa", "java.lang.double");
@@ -131,7 +125,7 @@ public class DBApp {
 		
 		htblColNameValue.clear( );
 		htblColNameValue.put("name", new String( "BO-G" ) );
-		test.updateTable(strTableName,"id", htblColNameValue);
+		test.updateTable(strTableName,"5", htblColNameValue);
 
 		System.out.println("updated into table \t"+test);
 
@@ -142,41 +136,6 @@ public class DBApp {
 	}
 	
 }
-
-
-
-
-// [Running] cd "c:\Users\Muhammad\Desktop\DB\src\" && javac DBApp.java && java DBApp
-// Note: DBApp.java uses unchecked or unsafe operations.
-// Note: Recompile with -Xlint:unchecked for details.
-// created table 	Student	id
-// -1
-// 0
-// 0
-// 0
-// 0
-// inserted into table 	Student	id
-// 0
-// [{gpa=1.5, name=John Noor, id=1}, {gpa=0.88, name=Zaky Noor, id=3}]
-
-// 1
-// [{gpa=0.95, name=Ahmed Noor, id=3}, {gpa=1.25, name=Dalia Noor, id=4}]
-
-// 2
-// [{gpa=0.95, name=Ahmed Noor, id=5}]
-
-// updated into table 	Student	id
-// 0
-// [{gpa=1.5, name=John Noor, id=1}, {gpa=0.88, name=Zaky Noor, id=3}]
-
-// 1
-// [{gpa=0.95, name=Ahmed Noor, id=3}, {gpa=1.25, name=Dalia Noor, id=4}]
-
-// 2
-// [{gpa=0.95, name=Ahmed Noor, id=5}]
-
-
-// [Done] exited with code=0 in 1.154 seconds
 
 
 
