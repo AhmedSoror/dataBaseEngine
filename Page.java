@@ -12,7 +12,7 @@ import java.util.Vector;
 
 public class Page implements Serializable {
 	
-	private final int intMaxRecords=2;
+	private final int intMaxRecords=3;
 	private int intId;									// id for the page
 	private static int intSerial;						// counting serial number to determine page id 
 	private String strClusteringKeyColumn;
@@ -42,9 +42,7 @@ public class Page implements Serializable {
 	// updating two records are equal                        /*before*/                           /*After*/
 	public static void update_helper( Hashtable<String,Object>htblRecord,  Hashtable<String,Object>htblUpdate) {
 		Set<String> colNames=htblUpdate.keySet();
-		System.out.println(colNames + "*************************************8");
 		for(String s :colNames) {
-			System.out.println(s+" "+ htblUpdate.get(s));
 				htblRecord.put(s, htblUpdate.get(s));
 			}
 	}
@@ -58,30 +56,30 @@ public class Page implements Serializable {
 	
 	public void sortPage() {
 		
-		vecData.sort(new Comparator<Hashtable<String, Object>>() {
-
-			@Override
-			public int compare(Hashtable<String, Object> htblRecord1, Hashtable<String, Object> htblRecord2) {
-				Comparable c1=(Comparable) htblRecord1.get(strClusteringKeyColumn);
-				Comparable c2=(Comparable) htblRecord2.get(strClusteringKeyColumn);
-				
-				return c1.compareTo(c2);
-			}
-		});
+		vecData.sort(new compareHashtables(strClusteringKeyColumn));
 
 	}
-	
 	public Hashtable<String, Object> insert  (Hashtable<String, Object>htblQuery) {
 		Hashtable <String, Object> htblLastRecord=null;
 		if(isFull()) {
 			htblLastRecord=vecData.lastElement();
 			vecData.removeElement(htblLastRecord);
+			Comparator comp  =new compareHashtables(strClusteringKeyColumn);
+			if(comp.compare(htblLastRecord, htblQuery)<=0) {
+				Hashtable<String , Object> temp = htblLastRecord;
+				htblLastRecord = htblQuery;
+				htblQuery = temp;
+			}
+			
 		}
 		vecData.add(htblQuery);
 		sortPage();
+		System.out.println();
 		return htblLastRecord;
 		    
 	}
+	
+	
 	/*
 	 * to delete a record in the page, loop through all records and match it with the record in hand using the method
 	 * "static boolean recordMatching(Hashtable<String,Object>htblQuery  ,  Hashtable<String,Object>htblRecord)"
@@ -104,51 +102,59 @@ public class Page implements Serializable {
 	 * if the records match, update and continue;  (don't use for each)
 	 */
 
-	public void update(String colType,String colName,String strKey,Hashtable<String,Object>htblUpdate) throws Exception{
+	public void update(String colType,String colName,String strKey,Hashtable<String,Object>htblUpdate) throws DBAppException{
 		int intCol ;
 		String strCol ;
 		double dblCol ;
 		boolean bolCol ;
 		Date datCol ;
-		switch(colType){
-			case " java.lang.Integer" : System.out.println("here");intCol = (Integer.parseInt(strKey));
+		 try{
+			switch(colType){
+				case "java.lang.Integer" : intCol = (Integer.parseInt(strKey));
+					for(int i=0;i<vecData.size();i++) {
+						Hashtable <String, Object> htblRecord= vecData.get(i);
+						if(htblRecord.get(colName).equals(intCol))
+							update_helper(htblRecord,htblUpdate);
+					}			
+					break;
+				case "java.lang.String" : strCol = strKey;
+					for(int i=0;i<vecData.size();i++) {
+						Hashtable <String, Object> htblRecord= vecData.get(i);
+						if(htblRecord.get(colName).equals(strCol))
+							update_helper(htblRecord,htblUpdate);
+					}
+					break;
+				case "java.lang.Double" : dblCol = (Double.parseDouble(strKey));
 				for(int i=0;i<vecData.size();i++) {
-					Hashtable <String, Object> htblRecord= vecData.get(i);
-					if(htblRecord.get(colName).equals(intCol))
-						update_helper(htblRecord,htblUpdate);
-				}			
-				break;
-			case " java.lang.String" : strCol = strKey;
-				for(int i=0;i<vecData.size();i++) {
-					Hashtable <String, Object> htblRecord= vecData.get(i);
-					if(htblRecord.get(colName).equals(strCol))
-						update_helper(htblRecord,htblUpdate);
+						Hashtable <String, Object> htblRecord= vecData.get(i);
+						if(htblRecord.get(colName).equals(dblCol))
+							update_helper(htblRecord,htblUpdate);
+					}
+					break;
+				case "java.lang.Boolean" : bolCol = (Boolean.parseBoolean(strKey));
+					for(int i=0;i<vecData.size();i++) {
+						Hashtable <String, Object> htblRecord= vecData.get(i);
+						if(htblRecord.get(colName).equals(bolCol))
+							update_helper(htblRecord,htblUpdate);
+					}
+					break;
+				case "java.lang.Date" : 
+				try{
+					datCol =new SimpleDateFormat("dd/MM/yyyy").parse(strKey);
+					for(int i=0;i<vecData.size();i++) {
+						Hashtable <String, Object> htblRecord= vecData.get(i);
+						if(htblRecord.get(colName).equals(datCol))
+							update_helper(htblRecord,htblUpdate);
+					}
 				}
-				break;
-			case " java.lang.Double" : dblCol = (Double.parseDouble(strKey));
-			for(int i=0;i<vecData.size();i++) {
-					Hashtable <String, Object> htblRecord= vecData.get(i);
-					if(htblRecord.get(colName).equals(dblCol))
-						update_helper(htblRecord,htblUpdate);
-				}
-				break;
-			case " java.lang.Boolean" : bolCol = (Boolean.parseBoolean(strKey));
-				for(int i=0;i<vecData.size();i++) {
-					Hashtable <String, Object> htblRecord= vecData.get(i);
-					if(htblRecord.get(colName).equals(bolCol))
-						update_helper(htblRecord,htblUpdate);
-				}
-				break;
-			case " java.lang.Date" : datCol =new SimpleDateFormat("dd/MM/yyyy").parse(strKey);
-				for(int i=0;i<vecData.size();i++) {
-					Hashtable <String, Object> htblRecord= vecData.get(i);
-					if(htblRecord.get(colName).equals(datCol))
-						update_helper(htblRecord,htblUpdate);
-				}
-				break;
+					catch(Exception e){ throw new DBAppException("date is not in the correct format");}
+					break;  
+				}	
+		}
+		catch(Exception e){
+			throw new DBAppException("Key type mismatch!");
 		}
 
-		System.out.println("finished");
 }
 
 	
@@ -214,5 +220,19 @@ public class Page implements Serializable {
 	}
 	public String toString() {
 		return "\n"+intId+"\n"+vecData;
+	}
+	static class compareHashtables implements Comparator<Hashtable<String, Object>>{
+		String strClusteringKeyColumn = "";
+		 public compareHashtables(String s) {
+			strClusteringKeyColumn=s;
+		}
+		@Override
+		public int compare(Hashtable<String, Object> htblRecord1, Hashtable<String, Object> htblRecord2) {
+			Comparable c1=(Comparable) htblRecord1.get(strClusteringKeyColumn);
+			Comparable c2=(Comparable) htblRecord2.get(strClusteringKeyColumn);
+			
+			return c1.compareTo(c2);
+		}
+		
 	}
 }
