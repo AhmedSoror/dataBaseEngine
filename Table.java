@@ -1,94 +1,106 @@
 
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.Vector;
 
-public class Table {
+public class Table implements Serializable {
 	private String strTableName;
 	private String strClusteringKeyColumn;
 	private Hashtable<String, String>htblColNameType;
 	private Vector<Page> vecPages;
+	private int id;
 	
 	public Table(String strTableName,String strClusteringKeyColumn,Hashtable<String, String>htblColNameType) {
 		this.strTableName = strTableName;
 		this.strClusteringKeyColumn=strClusteringKeyColumn;
 		this.htblColNameType=htblColNameType;
+		id=0;
 		vecPages=new Vector<Page>();
-	}
+			try {
+						FileWriter fileWriter=new FileWriter("data/metadata.csv",true);
+						Set<String> colNames=htblColNameType.keySet();
+						for(String s :colNames) {
+							fileWriter.write(strTableName+","+s+","+htblColNameType.get(s)+","+isKey(s)+","+"False\n");
+				}
+						fileWriter.close();			
+			} catch (IOException e) {
+						System.out.println("Error in writing metadata");
+				}
+		}
+		public boolean isKey(String Key) {
+			return strClusteringKeyColumn.equals(Key);
+		}
 	/*
 	 *	 finding the page which contains the data if the record contains the clustringKeyColumn by comparing the first and last records
-	 *	returns the index of the required page if found else returns -1 meaning a new page should be created 
+	 *	sreturns the index of the required page if found else returns -1 meaning a new page should be created 
 	 */
 	
 	public int findPage(Hashtable<String,Object>htblColNameValue) {
-		/*
+		
+		// Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		// for (int i=0;i<vecPages.size();i++) {
+		// 	if(i==vecPages.size()-1) return i;
+		// 	Comparable last = (Comparable)vecPages.get(i).getRecord(vecPages.get(i).size()-1).get(strClusteringKeyColumn);
+		// 	if(clusterInserted.compareTo(last)<=0)return i;
+		// 	else {
+		// 		Comparable firstNextPage = (Comparable)vecPages.get(i+1).getRecord(0).get(strClusteringKeyColumn);
+		// 		if(clusterInserted.compareTo(firstNextPage)<=0)return i;
+		// 	}
+		// }
+		// return -1;
+		
 		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
-		//for each page we get first and last elements and compare with the inserted one
-		for(int i=vecPages.size()-1;i>=0;i--) {
-			Page p =vecPages.get(i);
-			Comparable first = (Comparable) p.getVecData().get(0).get(strClusteringKeyColumn);
-			if((first.compareTo(clusterInserted)<=0)) {
-				return i;
-				}
-			}
-		return -1;
-		*/
-//		int index=-1;
-//		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
-//		for(int i=0;i<vecPages.size();i++) {
-//			Page p=vecPages.get(i);
-//			Comparable last = (Comparable) p.getRecord(p.size()-1).get(strClusteringKeyColumn);
-//			if(last.compareTo(clusterInserted)<=0) {
-//				index=i;
-//			}
-//			else {
-//				Comparable first = (Comparable) p.getRecord(0).get(strClusteringKeyColumn);
-//				if(first.compareTo(clusterInserted)<=0) {
-//					index=i;
-//				}
-//			}
-//		}
-//		return index;
-		Comparable clusterInserted= (Comparable) htblColNameValue.get(strClusteringKeyColumn);
-		for (int i=0;i<vecPages.size();i++) {
-			if(i==vecPages.size()-1) return i;
-			Comparable last = (Comparable)vecPages.get(i).getRecord(vecPages.get(i).size()-1).get(strClusteringKeyColumn);
+		for (int i=0;i<id;i++) {
+			if(i==id-1) return i;
+			Page page =loadPage(i);
+			if(page==null)continue;
+			Comparable last = (Comparable)page.getRecord(page.size()-1).get(strClusteringKeyColumn);
 			if(clusterInserted.compareTo(last)<=0)return i;
 			else {
-				Comparable firstNextPage = (Comparable)vecPages.get(i+1).getRecord(0).get(strClusteringKeyColumn);
+				Page nextPage = loadPage(i+1);
+				if(nextPage==null)continue;
+				Comparable firstNextPage = (Comparable)nextPage.getRecord(0).get(strClusteringKeyColumn);
 				if(clusterInserted.compareTo(firstNextPage)<=0)return i;
 			}
 		}
 		return -1;
-		
-		
-		
 	}
 	
 	// inserting into the table using the clustring column
 	
 	public void insert(Hashtable<String,Object>htblColNameValue) {
+		// htblColNameValue.put("TouchDate", new Date());
+		// int pageIndex = findPage(htblColNameValue);
+		// if(pageIndex!=-1) {	
+		// 	insert_helper(pageIndex, htblColNameValue);
+		// }
+		// else {
+		// 	vecPages.add(new Page(strClusteringKeyColumn));
+		// 	vecPages.get(vecPages.size()-1).insert(htblColNameValue);
+		// }
 		htblColNameValue.put("TouchDate", new Date());
 		int pageIndex = findPage(htblColNameValue);
+		System.out.println("find Page: "+pageIndex);
 		if(pageIndex!=-1) {	
 			insert_helper(pageIndex, htblColNameValue);
 		}
 		else {
-			vecPages.add(new Page(strClusteringKeyColumn));
-			vecPages.get(vecPages.size()-1).insert(htblColNameValue);
+			Page newPage = new Page(strClusteringKeyColumn);
+			newPage.insert(htblColNameValue);
+			writePage(newPage, id++);	
 		}
 	}
 	
 	public void insert_helper(int pageIndex,Hashtable<String,Object>htblColNameValue){
 		if(htblColNameValue==null)return;
 		Hashtable<String,Object> lastRecord = null;
-		Page page 	=vecPages.get(pageIndex);
+		Page page 	=loadPage(pageIndex);
+		if(page==null){insert_helper(pageIndex+1, htblColNameValue);return;}
 		lastRecord =page.insert(htblColNameValue);
-		if(pageIndex==vecPages.size()-1 && lastRecord!=null)vecPages.add(new Page(strClusteringKeyColumn));
+		writePage(page,pageIndex);
+		if(pageIndex==id-1 && lastRecord!=null)writePage(new Page(strClusteringKeyColumn),id++);
 		insert_helper(pageIndex+1, lastRecord);
 	}
 	
@@ -96,34 +108,40 @@ public class Table {
 	 * delete from a table by looping through all pages and match records
 	 */
 	public void delete (Hashtable<String,Object>htblColNameValue) {
-		for(int i=vecPages.size()-1;i>=0;i--) {
-			Page page = vecPages.get(i);
+		for(int i=id-1;i>=0;i--) {
+			Page page = loadPage(i);
+			if(page==null)continue;
 			page.delete(htblColNameValue);							// in each page delete records matching with the query
+			writePage(page, i);
 			if (page.isEmpty())
-				vecPages.remove(page);
+				{
+					File file =new File("data/"+this.strTableName+" "+i+".ser"); 
+					file.delete();
+				}
 		}	
 	}
 	
 
-	public void update(String strKey,Hashtable<String,Object> htblColNameValue) throws Exception{
+	public void update(String strKey,Hashtable<String,Object> htblColNameValue) throws DBAppException{
 		String s = this.getPrimaryType();
-		System.out.println(s);
 		String[] primary = s.split("#");
 		String columnType=primary[0];
 		String columnName=primary[1];
 
-		for(int i=vecPages.size()-1;i>=0;i--) {
-			Page page = vecPages.get(i);
-			page.update(columnType,columnName,strKey,htblColNameValue);							// in each page delete records matching with the query
+		for(int i=id-1;i>=0;i--) {
+			Page page = loadPage(i);
+			if(page==null)continue;
+			page.update(columnType,columnName,strKey,htblColNameValue);							// in each page update records matching with the query
+			writePage(page, i);
 		}	
 	}
 
-	public  String getPrimaryType ()throws Exception{
+	public  String getPrimaryType ()throws DBAppException{
 		String columnType=null;
 		String columnName=null;
 		String currentLine = "";
-//		FileReader fileReader= new FileReader("C:\\Users\\Muhammad\\Desktop\\DB\\data\\metadata.csv");
-		FileReader fileReader= new FileReader(".\\data\\metadata.csv");
+		try{
+		FileReader fileReader= new FileReader("data/metadata.csv");
 		BufferedReader br = new BufferedReader(fileReader);
 		while ((currentLine = br.readLine()) != null) {
 			String[] line =currentLine.split(",");
@@ -132,47 +150,44 @@ public class Table {
 			columnType = line[2];
 			String primaryKey = line[3];
 			String indexed = line[4];
-			if(tableName.equals(this.strTableName)&&primaryKey.equals(" True"))
+			if(tableName.equals(this.strTableName)&&primaryKey.equals("True"))
 				break;
 		}
-		return columnType+"#"+columnName;
+		return columnType+"#"+columnName;}
+		catch (Exception e){
+			throw new DBAppException(e.getMessage());
+		}
 	}
 
+	public boolean writePage(Page page,int i){					//******** */
+		try {
+			FileOutputStream fileOut = new FileOutputStream("data/"+this.strTableName+" "+i+".ser");
+			ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+			objectOut.writeObject(page);
+			objectOut.close();
+			return true;
+
+		} catch (Exception ex) {
+			return false;
+		}
+	}
+	public Page loadPage(int i){								//********//
+		try {
+			FileInputStream filein = new FileInputStream("data/"+this.strTableName+" "+i+".ser");
+			ObjectInputStream objectin = new ObjectInputStream(filein);
+			Page page =(Page)objectin.readObject();
+			objectin.close();
+			return page;
+
+		} catch (Exception ex) {
+			return null;
+		}
+	}
 
 	
 	public static void main(String[] args) {
 
-		/*
-	 	String strTableName = "Student";
-		Hashtable htblColNameType = new Hashtable( );
-		htblColNameType.put("id", "java.lang.String");
-		htblColNameType.put("name", "java.lang.String");
-		htblColNameType.put("gpa", "java.lang.String");
-		Table t=new Table(strTableName, "id", htblColNameType);
-		
-		
-		Hashtable htblColNameValue1 = new Hashtable( );
-
-		Hashtable htblColNameValue2 = new Hashtable( );
-		
-		
-		htblColNameValue1.put("id", new Integer( 453455 ));
-		htblColNameValue1.put("name", new String("Ahmed Noor" ) );
-		htblColNameValue1.put("gpa", new Double( 0.95 ) );
-		t.insert( htblColNameValue1 );
-		htblColNameValue2.put("id", new Integer( 5674567 ));
-		htblColNameValue2.put("name", new String("Dalia Noor" ) );
-		htblColNameValue2.put("gpa", new Double( 1.25 ) );
-		t.insert(  htblColNameValue2 );
-		
-		
-//		t.insert(htblColNameType1);
-//		t.insert(htblColNameType2);
-//		t.insert(htblColNameType3);
-//		t.insert(htblColNameType4);
-//		System.out.println(t.vecPairs);
-		
-		*/
+	
 	}
 
 	public String getStrTableName() {
@@ -210,10 +225,11 @@ public class Table {
 		StringBuilder sb=new StringBuilder();
 		sb.append(strTableName+"\t"+strClusteringKeyColumn);
 //		sb.append("\t"+htblColNameType);
-		for(Page p:vecPages) {
-			sb.append(p.toString()+"\n");
+		for(int i=0;i<id;i++) {
+			Page page = loadPage(i);
+			if(page==null)continue;
+			sb.append((page).toString()+"\n");
 		}
-		
 		return sb.toString();
 	}
 }
