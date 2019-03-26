@@ -8,7 +8,6 @@ public class BitMapIndex extends Table {
 	String strTableName;
 	String strColName;
 	TreeMap<String, String> mapIndex;
-	Vector<Integer>vecPageNumber ;		// maps the page number of index
 	
 //	------------------------------------------------------(Constructor)------------------------------------------------------------------------------
 	public BitMapIndex(String strTableName,String strColName,Hashtable<String, String> htblColNameType){
@@ -17,7 +16,6 @@ public class BitMapIndex extends Table {
 		this.strTableName=strTableName;
 		this.strColName=strColName;
 		this.mapIndex=new TreeMap<>();
-		vecPageNumber=new Vector<>();
 	}
 	
 //	------------------------------------------------------(Write to disk)------------------------------------------------------------------------------
