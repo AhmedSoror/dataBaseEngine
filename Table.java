@@ -171,7 +171,6 @@ public class Table implements Serializable {
 	}
 	
 //	-----------------------------------------------( Create Bitmap Index )-------------------------------------------------------------------------------------------
-/*
 	public void createBitmapIndex(String strColName) {
 		Hashtable<String, String> htblColNameType=new Hashtable<>();
 		htblColNameType.put(strColName, "java.lang.String");
@@ -179,19 +178,18 @@ public class Table implements Serializable {
 		BitMapIndex index=new BitMapIndex(strTableName, strColName,htblColNameType);
 		vecIndecies.add(index);
 		
-//		TreeMap<String, String>setDistinctColName=new TreeMap<>();
 		String zeros=String.join("", Collections.nCopies(recordsCount, "0"));
-		for (int i = id - 1; i >= 0; i--) {
+		for (int i = 0; i <= id-1; i++) {
 			Page page = loadPage(i);
 			if (page == null)
 				continue;
 			
 			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
-				index.mapIndex.put((String)(htblRecord.get(strColName).toString()+""),zeros);			// works only with strings*****************
+				index.mapIndex.put((String)(htblRecord.get(strColName).toString()),zeros);
 			}
 		}
 		int count=0;		//no of zeros 
-		for (int i = id - 1; i >= 0; i--) {
+		for (int i = 0; i <= id - 1; i++) {
 			Page page = loadPage(i);
 			if (page == null)
 				continue;
@@ -206,14 +204,12 @@ public class Table implements Serializable {
 					
 				}
 				
-				index.mapIndex.put((String)( ""+htblRecord.get(strColName)),newBits);
+				index.mapIndex.put((String)(""+htblRecord.get(strColName)),newBits);
 				count++;
 			}
 		}
 		index.writeIndex();
-		System.out.println("Table L236: "+index.mapIndex);
 	}
-	*/
 	
 //	-----------------------------------------------( Get special record )-------------------------------------------------------------------------------------------
 	
@@ -391,45 +387,6 @@ public class Table implements Serializable {
 		
 		
 	}
-	public void createBitmapIndex(String strColName) {
-		Hashtable<String, String> htblColNameType=new Hashtable<>();
-		htblColNameType.put(strColName, "java.lang.String");
-		htblColNameType.put("BitMapBits", "java.lang.String");
-		BitMapIndex index=new BitMapIndex(strTableName, strColName,htblColNameType);
-		vecIndecies.add(index);
-		
-		String zeros=String.join("", Collections.nCopies(recordsCount, "0"));
-		for (int i = 0; i <= id-1; i++) {
-			Page page = loadPage(i);
-			if (page == null)
-				continue;
-			
-			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
-				index.mapIndex.put((String)(htblRecord.get(strColName).toString()),zeros);
-			}
-		}
-		int count=0;		//no of zeros 
-		for (int i = 0; i <= id - 1; i++) {
-			Page page = loadPage(i);
-			if (page == null)
-				continue;
-			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
-				String oldBits=index.mapIndex.get((String)( htblRecord.get(strColName)+""));
-				String newBits="";
-				if(count>0) {
-					newBits=oldBits.substring(0, count)+"1"+oldBits.substring(count+1);
-				}
-				else {
-					newBits="1"+oldBits.substring(count+1);
-					
-				}
-				
-				index.mapIndex.put((String)(""+htblRecord.get(strColName)),newBits);
-				count++;
-			}
-		}
-		index.writeIndex();
-		System.out.println("Table L417: "+index.mapIndex);
-	}
+	
 	
 }
