@@ -391,7 +391,6 @@ public class Table implements Serializable {
 		
 		
 	}
-	
 	public void createBitmapIndex(String strColName) {
 		Hashtable<String, String> htblColNameType=new Hashtable<>();
 		htblColNameType.put(strColName, "java.lang.String");
@@ -407,11 +406,10 @@ public class Table implements Serializable {
 			
 			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
 				index.mapIndex.put((String)(htblRecord.get(strColName).toString()),zeros);
-				index.vecPageNumber.add(i);
 			}
 		}
 		int count=0;		//no of zeros 
-		for (int i = id - 1; i >= 0; i--) {
+		for (int i = 0; i <= id - 1; i++) {
 			Page page = loadPage(i);
 			if (page == null)
 				continue;
@@ -432,8 +430,6 @@ public class Table implements Serializable {
 		}
 		index.writeIndex();
 		System.out.println("Table L417: "+index.mapIndex);
-		System.out.println("Table L418: "+index.vecPageNumber);
 	}
-
 	
 }
