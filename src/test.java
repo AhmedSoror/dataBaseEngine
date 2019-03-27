@@ -13,11 +13,11 @@ public class test {
 		 
         TreeMap<Comparable, String> mapIndex = new TreeMap<Comparable, String>(); 
  
-        mapIndex.put(10, "10000");
-        mapIndex.put(20, "01000");
-        mapIndex.put(30, "00100");
-        mapIndex.put(40, "00010");
-        mapIndex.put(50, "00001");
+        mapIndex.put("Ali Noor", "10000");
+        mapIndex.put("Dalia Noor", "01000");
+//        mapIndex.put("Ahmed Noor", "00100");
+//        mapIndex.put(40, "00010");
+//        mapIndex.put(50, "00001");
   
 //        System.out.println(mapIndex);
 //        int bitNumber=0;
@@ -38,10 +38,7 @@ public class test {
         /*
         System.out.println(mapIndex);
 
-        Set<Integer> list=mapIndex.keySet();
-        int x=Arrays.binarySearch(list.toArray(), 45);
-        x=x<0?x*-1-2:x;
-        
+       
         System.out.println(x);
         System.out.println(list.toArray()[x]); 
         */
@@ -58,9 +55,18 @@ public class test {
         */
 
 //	{10=10000, 20=01000, 30=00100, 40=00010, 50=00001}
+/*
         System.out.println(mapIndex);
         insertIndex( new Integer(40), new Integer(45), mapIndex);
         System.out.println(mapIndex);
+        */
+        
+        System.out.println(mapIndex);
+        Set<Comparable> list=mapIndex.keySet();
+        int x=Arrays.binarySearch(list.toArray(), "Ahmed Noor");
+        x=x<0?x*-1-2:x;
+        System.out.println(x);
+        
         
 	}
 

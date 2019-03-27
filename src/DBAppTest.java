@@ -16,11 +16,15 @@ public class DBAppTest {
 		htblColNameType1.put("gpa", "java.lang.double");
 		test.createTable(strTableName1, "id", htblColNameType1);
 
+
 //--1		
 		htblColNameValue1.put("id", new Integer(10));
 		htblColNameValue1.put("name", new String("Ali Noor"));
 		htblColNameValue1.put("gpa", new Double(3.14));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
+
+		test.createBitmapIndex(strTableName1, "id");
+		test.createBitmapIndex(strTableName1, "name");
 //--2
 		htblColNameValue1.clear();
 		htblColNameValue1.put("id", new Integer(20));
@@ -30,13 +34,13 @@ public class DBAppTest {
 //--3
 		htblColNameValue1.clear();
 		htblColNameValue1.put("id", new Integer(30));
-		htblColNameValue1.put("name", new String("Ahmed Noor"));
+		htblColNameValue1.put("name", new String("Ali Noor"));
 		htblColNameValue1.put("gpa", new Double(1.25));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 //--4
 		htblColNameValue1.clear();
 		htblColNameValue1.put("id", new Integer(40));
-		htblColNameValue1.put("name", new String("Ahmed Noor"));
+		htblColNameValue1.put("name", new String("John Noor"));
 		htblColNameValue1.put("gpa", new Double(1.5));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 //--5
@@ -46,10 +50,9 @@ public class DBAppTest {
 		htblColNameValue1.put("gpa", new Double(0.98));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 
-		test.createBitmapIndex(strTableName1, "id");
 //--6		
 		htblColNameValue1.clear();
-		htblColNameValue1.put("id", new Integer(60));
+		htblColNameValue1.put("id", new Integer(5));
 		htblColNameValue1.put("name", new String("Zaky Noor"));
 		htblColNameValue1.put("gpa", new Double(0.88));
 		test.insertIntoTable(strTableName1, htblColNameValue1);

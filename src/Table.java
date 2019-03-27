@@ -13,6 +13,7 @@ import java.util.prefs.PreferenceChangeEvent;
 
 import javax.swing.text.html.HTMLDocument.HTMLReader.PreAction;
 
+
 public class Table implements Serializable {
 	private String strTableName;
 	private String strClusteringKeyColumn;
@@ -184,7 +185,7 @@ public class Table implements Serializable {
 		htblColNameType.put(strColName, "java.lang.String");
 		htblColNameType.put("BitMapBits", "java.lang.String");
 		BitMapIndex index=new BitMapIndex(strTableName, strColName,htblColNameType);
-		vecIndecies.add(index);
+		
 		
 		String zeros=String.join("", Collections.nCopies(recordsCount, "0"));
 		for (int i = 0; i <= id-1; i++) {
@@ -217,6 +218,7 @@ public class Table implements Serializable {
 				count++;
 			}
 		}
+		vecIndecies.add(index);
 		index.writeIndex();
 	}
 		
@@ -456,14 +458,19 @@ public class Table implements Serializable {
 
 		return occurences;
 	}
-	public static int findLastOne(String bitStream) {
-		for(int i=bitStream.length()-1;i>=0;i--) {
-			if(bitStream.charAt(i)=='1')
-				return i+1;
+	public Comparable getPreviousRecord(BitMapIndex index,Comparable insertedRecord) {
+		Set<Comparable> list=index.mapIndex.keySet();
+	    int x=Arrays.binarySearch(list.toArray(), insertedRecord);
+	    x=x<0?x*-1-2:x;
+	    try {
+			   return ((Comparable) list.toArray()[x]);
+		   }
+		catch(Exception e) {
+			   return null;
 		}
-		return -1;
 	}
-	
+
+/*
 	public int findInsertPage(Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		BitMapIndex clusterKeyIndex=null;
 		for(BitMapIndex index:vecIndecies) {
@@ -472,36 +479,78 @@ public class Table implements Serializable {
 				break;
 			}
 		}
-		if(clusterKeyIndex.mapIndex.containsKey(htblColNameValue.get(strClusteringKeyColumn))) {
+		Comparable insertedRecord=(Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		if(clusterKeyIndex.mapIndex.containsKey(insertedRecord)) {
 			throw new DBAppException("Primary Key exists");
 		}
 		
-		Set<Comparable> list=clusterKeyIndex.mapIndex.keySet();
-	    int x=Arrays.binarySearch(list.toArray(), 45);
-	    x=x<0?x*-1-2:x;
-	    Comparable prviosRecord=(Comparable) list.toArray()[x];
-	    
-	    Vector <RecordLocation> vecRecordLocation=findPageUsingIndex(strClusteringKeyColumn, prviosRecord);
-	    
-	    int pageNumber=vecRecordLocation.get(vecRecordLocation.size()-1).pageNumber;
 		
+		Comparable previousRecord=getPreviousRecord(clusterKeyIndex,insertedRecord);
+		int pageNumber=0;
+		if(previousRecord!=null) {
+			Vector <RecordLocation> vecRecordLocation=findPageUsingIndex(strClusteringKeyColumn, previousRecord);
+			pageNumber=vecRecordLocation.get(vecRecordLocation.size()-1).pageNumber;
+		}
+		
+
 	    
-	    insertIndex(clusterKeyIndex, prviosRecord,(Comparable) htblColNameValue.get(strClusteringKeyColumn));
+//	    clusterKeyIndex.insertIndex( previousRecord,insertedRecord);
+	    clusterKeyIndex.insertIndex( htblColNameValue);
 	    
 	    
 	    return pageNumber;
 		
 	}
-	public void insertIndex(BitMapIndex clusterKeyIndex, Comparable prviosRecord,Comparable insertedRecordValue) {
+	*/
+	public int findInsertPage(Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		BitMapIndex clusterKeyIndex=null;
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				clusterKeyIndex=index;
+				break;
+			}
+		}
+		Comparable insertedRecord=(Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		if(clusterKeyIndex.mapIndex.containsKey(insertedRecord)) {
+			throw new DBAppException("Primary Key exists");
+		}
 		
-		String prviosRecordBits=clusterKeyIndex.mapIndex.get(prviosRecord);
-	    int bitSreamIndex=findLastOne( prviosRecordBits);
-	    clusterKeyIndex.insert(bitSreamIndex);
-	    String zeros=String.join("", Collections.nCopies(prviosRecordBits.length(), "0"));
-	    String insertedIndex=zeros.substring(0, bitSreamIndex)+"1"+zeros.substring(bitSreamIndex);
-	    clusterKeyIndex.mapIndex.put(insertedRecordValue, insertedIndex);
+		
+		Comparable previousRecord=getPreviousRecord(clusterKeyIndex,insertedRecord);
+		int pageNumber=0;
+		if(previousRecord!=null) {
+			Vector <RecordLocation> vecRecordLocation=findPageUsingIndex(strClusteringKeyColumn, previousRecord);
+			pageNumber=vecRecordLocation.get(vecRecordLocation.size()-1).pageNumber;
+		}
+		
+		String previousRecordBits=clusterKeyIndex.mapIndex.firstEntry().getValue();
+		int bitSreamIndex=0;
+		if(previousRecord!=null) {
+			previousRecordBits=clusterKeyIndex.mapIndex.get(previousRecord);
+			bitSreamIndex=findLastOne( previousRecordBits);
+		}
+//	    clusterKeyIndex.insertIndex( previousRecord,insertedRecord);
+	    clusterKeyIndex.insertIndex( htblColNameValue,bitSreamIndex);
+	    System.out.println("table 546 index:  "+clusterKeyIndex);
+	    
+	    for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				continue;
+			}
+			System.out.println("table 546 index:  "+index);
+			index.insertIndex(htblColNameValue,bitSreamIndex);
+		}
+	    return pageNumber;
 		
 	}
+	public static int findLastOne(String bitStream) {
+		for(int i=bitStream.length()-1;i>=0;i--) {
+			if(bitStream.charAt(i)=='1')
+				return i+1;
+		}
+		return -1;
+	}
+	
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
 			throw new DBAppException("clustering key must be entered");
@@ -539,6 +588,12 @@ public class Table implements Serializable {
 				System.out.println("error in properties file");
 			}
 		}
-		System.out.println("Table 520: "+mapPageLength);
+//		for(BitMapIndex index:vecIndecies) {
+//			if(index.strColName.equals(strClusteringKeyColumn)) {
+//				continue;
+//			}
+//			System.out.println("table 546 index:  "+index);
+//			index.insertIndex(htblColNameValue);
+//		}
 	}
 }
