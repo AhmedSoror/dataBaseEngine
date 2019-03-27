@@ -1,0 +1,16 @@
+Table Name, Column Name, Column Type, Key, IndexedEmployee,TouchDate,java.util.Date,false,False
+Employee,gpa,java.lang.double,false,False
+Employee,name,java.lang.String,false,False
+Employee,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedEmployee,TouchDate,java.util.Date,false,False
+Employee,gpa,java.lang.double,false,False
+Employee,name,java.lang.String,false,False
+Employee,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedEmployee,TouchDate,java.util.Date,false,False
+Employee,gpa,java.lang.double,false,False
+Employee,name,java.lang.String,false,False
+Employee,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedEmployee,TouchDate,java.util.Date,false,False
+Employee,gpa,java.lang.double,false,False
+Employee,name,java.lang.String,false,False
+Employee,id,java.lang.Integer,true,False

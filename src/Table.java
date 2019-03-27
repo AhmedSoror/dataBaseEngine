@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -17,7 +18,7 @@ public class Table implements Serializable {
 //	--------------------------------------------------(New Attributes)-----------------------------------------------------------------------------------------
 	private Vector<BitMapIndex> vecIndecies;
 	private  int recordsCount=0;
-	
+	private TreeMap<Integer,Integer> mapPageLength;
 	
 	
 //	-----------------------------------------------( Constructor )-------------------------------------------------------------------------------------------
@@ -29,6 +30,7 @@ public class Table implements Serializable {
 		id = 0;
 		vecPages = new Vector<Page>();
 		vecIndecies=new Vector<>();						//*******************************
+		mapPageLength=new TreeMap();					//*******************************
 		try {
 			FileWriter fileWriter = new FileWriter("data/"+strTableName+"metadata.csv", true);
 			Set<String> colNames = htblColNameType.keySet();
@@ -67,7 +69,7 @@ public class Table implements Serializable {
 		}
 		return -1;
 	}
-	
+	/*
 	
 	public void insert_helper(int pageIndex, Hashtable<String, Object> htblColNameValue) {
 		if (htblColNameValue == null)
@@ -89,7 +91,7 @@ public class Table implements Serializable {
 			}
 		insert_helper(pageIndex + 1, lastRecord);
 	}
-
+	*/
 	
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
@@ -105,6 +107,7 @@ public class Table implements Serializable {
 			try {
 				newPage = new Page(strClusteringKeyColumn);
 				newPage.insert(htblColNameValue);
+				mapPageLength.put(id,1);				//*********************( New )*********************
 				writePage(newPage, id++);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -113,9 +116,8 @@ public class Table implements Serializable {
 		}
 	}
 
-
 //	-----------------------------------------------( Delete )-------------------------------------------------------------------------------------------
-	/*
+
 	public void delete(Hashtable<String, Object> htblColNameValue) {
 		for (int i = id - 1; i >= 0; i--) {
 			Page page = loadPage(i);
@@ -123,13 +125,14 @@ public class Table implements Serializable {
 				continue;
 			page.delete(htblColNameValue); // in each page delete records matching with the query
 			writePage(page, i);
+			mapPageLength.put(i, page.size());
 			if (page.isEmpty()) {
 				File file = new File("data/" + this.strTableName + " " + i + ".class");
 				file.delete();
 			}
 		}
 	}
-	*/
+	
 //	-----------------------------------------------( Update )-------------------------------------------------------------------------------------------
 	public String getPrimaryType() throws DBAppException {					// return clustringKey type#name
 		String columnType = null;
@@ -185,16 +188,18 @@ public class Table implements Serializable {
 				continue;
 			
 			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
-				index.mapIndex.put((String)(htblRecord.get(strColName).toString()),zeros);
+//				index.mapIndex.put((String)(htblRecord.get(strColName).toString()),zeros);
+				index.mapIndex.put((Comparable)( htblRecord.get(strColName)),zeros);
 			}
 		}
 		int count=0;		//no of zeros 
 		for (int i = 0; i <= id - 1; i++) {
 			Page page = loadPage(i);
-			if (page == null)
+			if (page == null) {
 				continue;
+			}
 			for(Hashtable<String, Object> htblRecord:page.getVecData()) {
-				String oldBits=index.mapIndex.get((String)( htblRecord.get(strColName)+""));
+				String oldBits=index.mapIndex.get( htblRecord.get(strColName));
 				String newBits="";
 				if(count>0) {
 					newBits=oldBits.substring(0, count)+"1"+oldBits.substring(count+1);
@@ -202,14 +207,19 @@ public class Table implements Serializable {
 				else {
 					newBits="1"+oldBits.substring(count+1);
 					
-				}
-				
-				index.mapIndex.put((String)(""+htblRecord.get(strColName)),newBits);
+				}				
+				index.mapIndex.put((Comparable) htblRecord.get(strColName),newBits);
 				count++;
 			}
 		}
 		index.writeIndex();
+		System.out.println("Table l215 "+index.mapIndex);
+		System.out.println("Table l217 "+mapPageLength);
+		 Vector <RecordLocation> newVec=findPageUsingIndex("name", new String("John Noor")) ;
+		 System.out.println(newVec);
 	}
+		
+		
 	
 //	-----------------------------------------------( Get special record )-------------------------------------------------------------------------------------------
 	
@@ -342,6 +352,7 @@ public class Table implements Serializable {
 			if (page == null)
 				continue;
 			page.delete(htblColNameValue); 					// in each page delete records matching with the query
+			
 			writePage(page, i);
 			if (page.isEmpty()) {
 				File file = new File("data/" + this.strTableName + " " + i + ".class");
@@ -369,7 +380,7 @@ public class Table implements Serializable {
 	
 	
 //	-----------------------------------------------( Modified Mathods )-------------------------------------------------------------------------------------------
-	
+	/*
 	public void delete(Hashtable<String, Object> htblColNameValue) {
 		boolean indexOnClusterKey=false;					// references index on cluster key
 		for(BitMapIndex index:vecIndecies) {
@@ -386,6 +397,65 @@ public class Table implements Serializable {
 		}
 		
 		
+	}
+	*/
+
+
+	public void insert_helper(int pageIndex, Hashtable<String, Object> htblColNameValue) {
+		if (htblColNameValue == null) {
+			return;
+		}
+		Hashtable<String, Object> lastRecord = null;
+		Page page = loadPage(pageIndex);
+		if (page == null) {
+			insert_helper(pageIndex + 1, htblColNameValue);
+			return;
+		}
+		lastRecord = page.insert(htblColNameValue);
+		writePage(page, pageIndex);
+		if (pageIndex == id - 1 && lastRecord != null)
+			try {
+				writePage(new Page(strClusteringKeyColumn), id++);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("Error in properties file");
+			}
+		mapPageLength.put(pageIndex, page.size());
+		insert_helper(pageIndex + 1, lastRecord);
+	}
+	/*
+	 test on page with empty fields
+	 
+	 */
+		
+	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {
+		String bitStream = "";
+		int pageNumber = 0;
+		int recordNumber = 0;
+		Vector<RecordLocation> occurences = new Vector <RecordLocation>();
+		for (BitMapIndex index : vecIndecies) {
+			if (index.strColName.equals(strColumnName)) {
+				if (index.mapIndex.get(objColumnValue)==null)
+					return occurences;
+				bitStream = index.mapIndex.get(objColumnValue);
+				int bit = 0;
+
+				for (int i = 0; i < mapPageLength.size(); i++) {
+					for (int j = 0; j < mapPageLength.get(i); j++) {
+						recordNumber++;
+						if (bitStream.charAt(bit)=='1') {
+							occurences.addElement(new RecordLocation(pageNumber,recordNumber));
+						}
+						bit++;
+					}
+					pageNumber++;
+					recordNumber = 0;
+				}
+
+			}
+		}
+
+		return occurences;
 	}
 	
 	

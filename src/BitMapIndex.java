@@ -7,12 +7,12 @@ import java.util.Vector;
 public class BitMapIndex extends Table {
 	String strTableName;
 	String strColName;
-	TreeMap<String, String> mapIndex;
+	TreeMap<Comparable, String> mapIndex;
 	
 //	------------------------------------------------------(Constructor)------------------------------------------------------------------------------
 	public BitMapIndex(String strTableName,String strColName,Hashtable<String, String> htblColNameType){
 //		String strTableName, String strClusteringKeyColumn, Hashtable<String, String> htblColNameType       (Table constructor)
-		super(strTableName+"_"+"strColName",strColName,htblColNameType);
+		super(strTableName+"_"+strColName,strColName,htblColNameType);
 		this.strTableName=strTableName;
 		this.strColName=strColName;
 		this.mapIndex=new TreeMap<>();
