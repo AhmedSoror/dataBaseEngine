@@ -1,8 +1,10 @@
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -63,21 +65,78 @@ public class BitMapIndex extends Table {
 			}
 		
 	}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+/*
+	public void insertIndex(Hashtable<String, Object> htblColNameValue) {
+		Comparable insertedRecordValue= (Comparable) htblColNameValue.get(strColName);
+		Comparable previousRecord=getPreviousRecord(insertedRecordValue);
+		String s=mapIndex.firstEntry().getValue();
+
+		String previousRecordBits=mapIndex.firstEntry().getValue();
+		int bitSreamIndex=0;
+		if(previousRecord!=null) {
+			previousRecordBits=mapIndex.get(previousRecord);
+			bitSreamIndex=findLastOne( previousRecordBits);
+		}
+		insert(bitSreamIndex);
+	    String zeros=String.join("", Collections.nCopies(s.length(), "0"));
+	    String insertedIndex=zeros.substring(0, bitSreamIndex)+"1"+zeros.substring(bitSreamIndex);
+	    mapIndex.put(insertedRecordValue, insertedIndex);
+		System.out.println("BitMapp class 86:mapIndex  "+mapIndex);
+	}
+	*/
+	
+	public void insertIndex(Hashtable<String, Object> htblColNameValue,int bitSreamIndex) {
+		Comparable insertedRecordValue= (Comparable) htblColNameValue.get(strColName);
+		String s=mapIndex.firstEntry().getValue();
+		insert(bitSreamIndex);
+		String zeros="";
+		if(mapIndex.containsKey(insertedRecordValue)) {
+			zeros=mapIndex.get(insertedRecordValue);
+			zeros=zeros.substring(0, bitSreamIndex)+zeros.substring(bitSreamIndex+1);
+		}
+		else {
+			zeros=String.join("", Collections.nCopies(s.length(), "0"));
+		}
+	    String insertedIndex=zeros.substring(0, bitSreamIndex)+"1"+zeros.substring(bitSreamIndex);
+	    mapIndex.put(insertedRecordValue, insertedIndex);
+//		System.out.println("BitMapp class 86:mapIndex  "+mapIndex);
+	}
+	public static int findLastOne(String bitStream) {
+		for(int i=bitStream.length()-1;i>=0;i--) {
+			if(bitStream.charAt(i)=='1')
+				return i+1;
+		}
+		return -1;
+	}
 	
    public void insert(int stringIndex){
 	   mapIndex.forEach((key, value)->
 	   			mapIndex.put(key,editBits(value,stringIndex))
 		);
-	   
    }
+   
 
    public static String editBits(String s,int stringIndex) {
 		int x=stringIndex;
 	    String r=s.substring(0,x)+"0"+s.substring(x);
 	    return r;
 	}
-	
    
+   public Comparable getPreviousRecord(Comparable insertedRecord) {
+		Set<Comparable> list=mapIndex.keySet();
+	    int x=Arrays.binarySearch(list.toArray(), insertedRecord);
+	    x=x<0?x*-1-2:x;
+	   try {
+		   return ((Comparable) list.toArray()[x]);
+	   }
+	   catch(Exception e) {
+		   return null;
+	   }
+	}
+	
+//-----------------------------------------------------------------------------------------------------------------------------------------
    
    
    
