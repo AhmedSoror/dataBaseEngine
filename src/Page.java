@@ -287,5 +287,18 @@ public class Page implements Serializable {
 
 	}
 	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	public void deleteByIndex(int ind) {
+		vecData.remove(ind);
+	}
+	
+	public void updateByIndex(int ind, Hashtable<String, Object> htblUpdate)	throws DBAppException {
+		Hashtable<String, Object> htblRecord = vecData.get(ind);
+			update_helper(htblRecord, htblUpdate);
+
+	}
+	
+	
 	
 }
