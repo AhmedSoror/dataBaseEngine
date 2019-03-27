@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -54,12 +55,12 @@ public class DBAppTest {
 		htblColNameValue1.put("gpa", new Double(0.88));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 		
-
+/*
 		htblColNameValue1.clear();
 		htblColNameValue1.put("name", new String("Ali Noor"));
 		test.deleteFromTable(strTableName1, htblColNameValue1);
-
-		test.createBitmapIndex(strTableName1, "name");
+*/
+//		test.createBitmapIndex(strTableName1, "name");
 
 		String strTableName = "Employee";
 		Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
@@ -76,7 +77,7 @@ public class DBAppTest {
 //--1		
 		htblColNameValue.put("id", new Integer(10));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
-		htblColNameValue.put("gpa", new Double(3.14));
+		htblColNameValue.put("gpa", new Double(0.14));
 		test.insertIntoTable(strTableName, htblColNameValue);
 		//--2
 		htblColNameValue.clear();
@@ -102,6 +103,11 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Zaky Noor"));
 		htblColNameValue.put("gpa", new Double(0.88));
 		test.insertIntoTable(strTableName, htblColNameValue);
+
+//		test.createBitmapIndex(strTableName, "name");
+		test.createBitmapIndex(strTableName, "gpa");
+		
+		
 //*/
 //		delete 
 		//--4
@@ -124,22 +130,53 @@ public class DBAppTest {
 		arrSQLTerms = new SQLTerm[2];
 		arrSQLTerms[0]=new SQLTerm();
 		arrSQLTerms[1]=new SQLTerm();
-		arrSQLTerms[0]._strTableName = "Student";
+//		arrSQLTerms[2]=new SQLTerm();
+		
+		arrSQLTerms[0]._strTableName = "Employee";
 		arrSQLTerms[0]._strColumnName="name";
 		arrSQLTerms[0]._strOperator ="=";
 		arrSQLTerms[0]._objValue="John Noor";
 		
-		arrSQLTerms[1]._strTableName = "Student";
+		arrSQLTerms[1]._strTableName = "Employee";
 		arrSQLTerms[1]._strColumnName="gpa";
-		arrSQLTerms[1]._strOperator ="=";
+		arrSQLTerms[1]._strOperator ="<";
 		arrSQLTerms[1]._objValue=new Double( 1.5 );
-		String[]strarrOperators = new String[1];
-		strarrOperators[0] = "OR";
-		Iterator resultSet = test.selectFromTable(arrSQLTerms , strarrOperators);
 		
+//		arrSQLTerms[2]._strTableName = "Employee";
+//		arrSQLTerms[2]._strColumnName="id";
+//		arrSQLTerms[2]._strOperator ="<=";
+//		arrSQLTerms[2]._objValue=new Integer( 30);
+		String[]strarrOperators = new String[1];
+		strarrOperators[0] = "AND";
+//		strarrOperators[1] = "AND";
+		
+		System.out.println("-------------------(or)----------------------------");
+		System.out.println("TEST 132 "+Arrays.toString(arrSQLTerms));
+		Iterator resultSet = test.selectFromTable(arrSQLTerms , strarrOperators);
 		while(resultSet.hasNext()) {
-			System.out.println(resultSet.next());
+			System.out.println(" "+resultSet.next());
 		}
+		
+		System.out.println("--------------------(and)------------------------------------");
+		System.out.println("TEST 132 "+Arrays.toString(arrSQLTerms));
+		strarrOperators[0] = "AND";
+		 resultSet = test.selectFromTable(arrSQLTerms , strarrOperators);
+		while(resultSet.hasNext()) {
+			System.out.println(" "+resultSet.next());
+		}
+		
+		System.out.println("----------------------(XOR)---------------------------------");
+		 System.out.println("TEST 132 "+Arrays.toString(arrSQLTerms));
+
+		strarrOperators[0] = "XOR";
+		 resultSet = test.selectFromTable(arrSQLTerms , strarrOperators);
+		 int i=0;
+		while(resultSet.hasNext()) {
+			System.out.println((i++)+" "+resultSet.next());
+		}
+		System.out.println("----------------------------------------------------------");
+		
+		
 	}
 
 }

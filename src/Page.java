@@ -304,7 +304,19 @@ public class Page implements Serializable {
 	public Hashtable getByIndex(int ind){
 		return vecData.get(ind);
 	}
-	
+//	-------------------------------------------------------------(New Methods)-------------------------------------------------------------------------------------
+	public int getRecordOrder(Hashtable<String, Object> htblRecord) {
+		Comparable c1 = (Comparable) htblRecord.get(strClusteringKeyColumn);		
+		int count=0;
+		Comparable htblTragetRecord=(Comparable)(htblRecord.get(strClusteringKeyColumn));
+		for(Hashtable<String, Object> htbl:vecData) {
+			if(((Comparable)(htbl.get(strClusteringKeyColumn))).compareTo(htblTragetRecord)==0) {
+				break;
+			}
+			count++;
+		}
+		return count;
+}
 	
 
 

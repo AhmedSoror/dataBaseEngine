@@ -1,13 +1,22 @@
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.Vector;
 
 public class Table implements Serializable {
@@ -93,7 +102,7 @@ public class Table implements Serializable {
 		insert_helper(pageIndex + 1, lastRecord);
 	}
 	*/
-	
+	/*
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
 			throw new DBAppException("clustering key must be entered");
@@ -116,7 +125,7 @@ public class Table implements Serializable {
 			}
 		}
 	}
-
+*/
 //	-----------------------------------------------( Delete )-------------------------------------------------------------------------------------------
 
 	public void delete(Hashtable<String, Object> htblColNameValue) {
@@ -336,72 +345,6 @@ public class Table implements Serializable {
 	}
 	
 //	-----------------------------------------------( Added Mathods )-------------------------------------------------------------------------------------------
-	
-	public void deleteByIndex(Hashtable<String, Object> htblColNameValue) {
-		/*
-		 * Search for record using search method
-		 * using the page number from the search, delete the record
-		 * 
-		 */
-		
-		
-	}
-	
-	public void deleteWithoutIndex(Hashtable<String, Object> htblColNameValue) {
-		for (int i = id - 1; i >= 0; i--) {
-			Page page = loadPage(i);
-			if (page == null)
-				continue;
-			page.delete(htblColNameValue); 					// in each page delete records matching with the query
-			
-			writePage(page, i);
-			if (page.isEmpty()) {
-				File file = new File("data/" + this.strTableName + " " + i + ".class");
-				file.delete();
-			}
-		}
-	}
-	public void deleteIndex(Hashtable<String, Object> htblColNameValue,int pageNumber) {
-		for(BitMapIndex index:vecIndecies) {
-			int count=0;
-			/*
-			 * loop through the bits,
-			 * 	 if bit==1 && vecPageNumber[i]==pageNumber
-			 * 		load page()
-			 * 		check record by record in page
-			 * 		if pagerecord == htblColNameValue
-			 * 			delete the coresponding bit
-			 * 
-			 */
-		
-		
-		}
-	}
-	
-	
-	
-//	-----------------------------------------------( Modified Mathods )-------------------------------------------------------------------------------------------
-	/*
-	public void delete(Hashtable<String, Object> htblColNameValue) {
-		boolean indexOnClusterKey=false;					// references index on cluster key
-		for(BitMapIndex index:vecIndecies) {
-			if(index.strColName.equals(strClusteringKeyColumn)) {
-				indexOnClusterKey=true;
-				break;
-			}
-		}
-		if(indexOnClusterKey) {
-			deleteByIndex(htblColNameValue);			
-		}
-		else {
-			deleteWithoutIndex(htblColNameValue);
-		}
-		
-		
-	}
-	*/
-
-
 	public void insert_helper(int pageIndex, Hashtable<String, Object> htblColNameValue) {
 		if (htblColNameValue == null) {
 			return;
@@ -424,12 +367,10 @@ public class Table implements Serializable {
 		mapPageLength.put(pageIndex, page.size());
 		insert_helper(pageIndex + 1, lastRecord);
 	}
-	/*
-	 test on page with empty fields
-	 
-	 */
+	
 		
-	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {
+	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {  //	 test on page with empty fields & on pages with deleted page in the middle
+
 		String bitStream = "";
 		int pageNumber = 0;
 		int recordNumber = 0;
@@ -458,7 +399,114 @@ public class Table implements Serializable {
 
 		return occurences;
 	}
+	public Comparable getPreviousRecord(BitMapIndex index,Comparable insertedRecord) {
+		Set<Comparable> list=index.mapIndex.keySet();
+	    int x=Arrays.binarySearch(list.toArray(), insertedRecord);
+	    x=x<0?x*-1-2:x;
+	    try {
+			   return ((Comparable) list.toArray()[x]);
+		   }
+		catch(Exception e) {
+			   return null;
+		}
+	}
+
+	public int findInsertPage(Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		BitMapIndex clusterKeyIndex=null;
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				clusterKeyIndex=index;
+				break;
+			}
+		}
+		Comparable insertedRecord=(Comparable) htblColNameValue.get(strClusteringKeyColumn);
+		Comparable previousRecord=getPreviousRecord(clusterKeyIndex,insertedRecord);
+		int pageNumber=0;
+		if(previousRecord!=null) {
+			Vector <RecordLocation> vecRecordLocation=findPageUsingIndex(strClusteringKeyColumn, previousRecord);
+			pageNumber=vecRecordLocation.get(vecRecordLocation.size()-1).pageNumber;
+		}
+		
+		String previousRecordBits=clusterKeyIndex.mapIndex.firstEntry().getValue();
+		int bitSreamIndex=0;
+		if(previousRecord!=null) {
+			previousRecordBits=clusterKeyIndex.mapIndex.get(previousRecord);
+			bitSreamIndex=findLastOne( previousRecordBits);
+		}
+//	    clusterKeyIndex.insertIndex( previousRecord,insertedRecord);
+	    clusterKeyIndex.insertIndex( htblColNameValue,bitSreamIndex);
+	    System.out.println("table 546 index:  "+clusterKeyIndex);
+	    return pageNumber;
+		
+	}
+	public static int findLastOne(String bitStream) {
+		for(int i=bitStream.length()-1;i>=0;i--) {
+			if(bitStream.charAt(i)=='1')
+				return i+1;
+		}
+		return -1;
+	}
 	
+	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
+			throw new DBAppException("clustering key must be entered");
+		}
+		htblColNameValue.put("TouchDate", new Date());
+
+		int pageIndex ;
+		boolean indexOnClusterKey=false;					// references index on cluster key
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				indexOnClusterKey=true;
+				break;
+			}
+		}
+		if(indexOnClusterKey) {
+			
+			pageIndex = findInsertPage(htblColNameValue);			
+		}
+		else {
+			pageIndex = findPage(htblColNameValue);
+		}
+		
+		if (pageIndex != -1) {
+			insert_helper(pageIndex, htblColNameValue);
+			
+		} else {
+			Page newPage;
+			try {
+				newPage = new Page(strClusteringKeyColumn);
+				newPage.insert(htblColNameValue);
+				mapPageLength.put(id,1);				//*********************( New )*********************
+				writePage(newPage, id++);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("error in properties file");
+			}
+		}
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				continue;
+			}
+			int bitSreamIndex=getBitSreamIndex(htblColNameValue,pageIndex);
+			index.insertIndex(htblColNameValue, bitSreamIndex);
+//			System.out.println("table 593 index:  "+index);
+		}
+	}
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	public int getBitSreamIndex(Hashtable<String, Object> htblRecord,int pageNumber) {
+		Page page=loadPage(pageNumber);
+		int x= page.getRecordOrder(htblRecord);
+		int pageCount=0;
+		for(Entry<Integer, Integer> entry : mapPageLength.entrySet()) {
+			if(pageNumber==pageCount++)
+				break;
+//			Integer key = entry.getKey();	
+			x+= entry.getValue();
+		}
+		
+		return x;
+}
 	
 	///////////////////////////////////////////////////////////////////SEARCH///////////////////////////////////////////////////////
 	
@@ -487,6 +535,7 @@ public class Table implements Serializable {
 	
 	public Vector<Hashtable<String , Object>> select (Vector<SQLTerm> vecTerms,Vector<String> vecOperators){
 		System.out.println(mapPageLength);
+		System.out.println("Table539  "+vecTerms);
 		vecTerms = evaluateIndexedColumns(vecTerms);
 		//loop on and
 		while(vecOperators.contains("AND")) {
@@ -535,6 +584,7 @@ public class Table implements Serializable {
 		String evaluation="";
 		for (SQLTerm term :allTerms) {
 			for (BitMapIndex index : vecIndecies) {
+				System.out.println("Table 587 ");
 				if (term._strColumnName.equals(index.strColName)) {
 					evaluation=index.getBitStream((Comparable)term._objValue,term._strOperator); //mmkn teragga3 string bardo 5alli balak
 					//evaluation=this.locationsToBitStream(occurences);
@@ -598,6 +648,7 @@ public class Table implements Serializable {
 //-------------------------------------------------------------------------------------	
 public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
 	//el etnein malhomsh index
+	System.out.println("Table 649: 1) "+term1._evaluation+" 2) "+term2._evaluation);
 	String term1Evaluation="";
 	String term2Evaluation="";
 	String result = "";
@@ -622,6 +673,7 @@ public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
 		}
 		else if (op.equals("XOR")) {
 			term1Evaluation=this.getBitStreamForNonIndexed(term1);
+			
 			for (int i =0 ;i<term1Evaluation.length();i++){
 				RecordLocation loc = getLocation(i);
 				Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
@@ -658,6 +710,7 @@ public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
 		}
 		else if (op.equals("XOR")) {
 			result=xorOperation(term1Evaluation, term2Evaluation);
+			
 		}
 		else if (op.equals("OR")) {
 			result=orOperation(term1Evaluation, term2Evaluation);
@@ -693,6 +746,7 @@ public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
 			}
 		}
 		else if (op.equals("XOR")) {
+			System.out.println("Table L673:bitstream "+term1Evaluation);
 			for (int i =0 ;i<HasIndex.length();i++){
 				RecordLocation loc = getLocation(i);
 				Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
@@ -712,7 +766,8 @@ public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
 						result+='0';
 					}
 				}
-			}		
+			}
+			
 		}
 		else if (op.equals("OR")) {
 			result=orOperation(HasIndex, this.getBitStreamForNonIndexed(termNoIndex));
