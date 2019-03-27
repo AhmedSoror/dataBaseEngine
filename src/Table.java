@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -428,7 +430,7 @@ public class Table implements Serializable {
 	}
 	
 		
-	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {  //	 test on page with empty fields
+	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {  //	 test on page with empty fields & on pages with deleted page in the middle
 
 		String bitStream = "";
 		int pageNumber = 0;
@@ -511,11 +513,6 @@ public class Table implements Serializable {
 			}
 		}
 		Comparable insertedRecord=(Comparable) htblColNameValue.get(strClusteringKeyColumn);
-		if(clusterKeyIndex.mapIndex.containsKey(insertedRecord)) {
-			throw new DBAppException("Primary Key exists");
-		}
-		
-		
 		Comparable previousRecord=getPreviousRecord(clusterKeyIndex,insertedRecord);
 		int pageNumber=0;
 		if(previousRecord!=null) {
@@ -532,7 +529,7 @@ public class Table implements Serializable {
 //	    clusterKeyIndex.insertIndex( previousRecord,insertedRecord);
 	    clusterKeyIndex.insertIndex( htblColNameValue,bitSreamIndex);
 	    System.out.println("table 546 index:  "+clusterKeyIndex);
-	    
+	    /*
 	    for(BitMapIndex index:vecIndecies) {
 			if(index.strColName.equals(strClusteringKeyColumn)) {
 				continue;
@@ -540,6 +537,7 @@ public class Table implements Serializable {
 			System.out.println("table 546 index:  "+index);
 			index.insertIndex(htblColNameValue,bitSreamIndex);
 		}
+	    */
 	    return pageNumber;
 		
 	}
@@ -588,12 +586,31 @@ public class Table implements Serializable {
 				System.out.println("error in properties file");
 			}
 		}
-//		for(BitMapIndex index:vecIndecies) {
-//			if(index.strColName.equals(strClusteringKeyColumn)) {
-//				continue;
-//			}
-//			System.out.println("table 546 index:  "+index);
-//			index.insertIndex(htblColNameValue);
-//		}
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				continue;
+			}
+			int bitSreamIndex=getBitSreamIndex(htblColNameValue,pageIndex);
+			index.insertIndex(htblColNameValue, bitSreamIndex);
+//			System.out.println("table 593 index:  "+index);
+		}
+		System.out.println(mapPageLength);
 	}
+
+	public int getBitSreamIndex(Hashtable<String, Object> htblRecord,int pageNumber) {
+		Page page=loadPage(pageNumber);
+		int x= page.getRecordOrder(htblRecord);
+		int pageCount=0;
+		for(Entry<Integer, Integer> entry : mapPageLength.entrySet()) {
+			if(pageNumber==pageCount++)
+				break;
+//			Integer key = entry.getKey();
+			x+= entry.getValue();
+		}
+		
+		return x;
+	}
+	
+	
+	
 }
