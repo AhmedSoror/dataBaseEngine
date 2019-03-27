@@ -31,11 +31,11 @@ public class BitMapIndex extends Table {
 	
 	
 //	------------------------------------------------------(Added Methods)------------------------------------------------------------------------------
-	public void deleteIndex(int bitNumber) {
+	// public void deleteIndex(int bitNumber) {
 
-		mapIndex.forEach( (key, value) -> mapIndex.put( key , value.substring(0,bitNumber)+value.substring(bitNumber+1) ) );
-		//		handle vecPageNumber
-	}
+	// 	mapIndex.forEach( (key, value) -> mapIndex.put( key , value.substring(0,bitNumber)+value.substring(bitNumber+1) ) );
+	// 	//		handle vecPageNumber
+	// }
 	
 	public void update (int ind,Comparable oldVal,Comparable  newVal) {						//BO-G
 		String sNew;
@@ -64,7 +64,49 @@ public class BitMapIndex extends Table {
 		
 	}
 	
+	public String getBitStream(Comparable key,String operator) {
+		String res="";
+		if(operator.equals("<")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)<0)res=orOperation(res, entry.getValue());
+				}
+		}
+		else if(operator.equals("<=")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)<=0)res=orOperation(res, entry.getValue());
+				}
+		}
+		else if(operator.equals(">")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)>0)res=orOperation(res, entry.getValue());
+				}
+		}
+		else if(operator.equals(">=")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)>=0)res=orOperation(res, entry.getValue());
+				}
+		}
+		else if(operator.equals("!=")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)!=0)res=orOperation(res, entry.getValue());
+				}
+		}
+		else if(operator.equals("=")) {
+			for(Map.Entry<Comparable,String> entry : mapIndex.entrySet()) {
+				if(entry.getKey().compareTo(key)==0)res=orOperation(res, entry.getValue());
+				}
+		}
+		return res;
+	}
 	
+	public static String orOperation(String s1,String s2) {
+		String res="";
+		for(int i=0;i<s1.length();i++) {
+			if(s1.charAt(i)=='1'||s2.charAt(i)=='1')res+="1";
+			else res+="0";
+		}
+		return res;
+	}
 	public static boolean hasNoValues(String s) {
 		return s.matches("0*");
 	}

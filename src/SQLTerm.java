@@ -4,6 +4,7 @@ public class SQLTerm {
 	String _strColumnName;
 	String _strOperator;
 	Object _objValue;
+	String _evaluation="";
 	
 	public SQLTerm(String strTableName,String strColumnName,String strOperator,	Object objValue) throws DBAppException {
 		strOperator=strOperator.trim();
@@ -20,6 +21,10 @@ public class SQLTerm {
 		this._strColumnName=strColumnName;
 		this._strOperator=strOperator;
 		this._objValue=objValue;
+	}
+
+	public SQLTerm() {
+		// TODO Auto-generated constructor stub
 	}
 	
 }

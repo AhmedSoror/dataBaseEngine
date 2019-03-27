@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -459,4 +460,389 @@ public class Table implements Serializable {
 	}
 	
 	
+	///////////////////////////////////////////////////////////////////SEARCH///////////////////////////////////////////////////////
+	
+//	public Vector<Hashtable<String, Object>> 
+//	public String findBitStream(SQLTerm term) {
+//		for (BitMapIndex index : vecIndecies) {
+//			if (index.strColName.equals(term._strColumnName)) {
+//				if(term._strOperator.equals("=")) {
+//					if (index.mapIndex.get(term._objValue)==null)
+//						return  String.join("", Collections.nCopies(recordsCount, "0"));
+//					else {
+//						return index.mapIndex.get(term._objValue);
+//					}
+//				}
+//				else if(term._strOperator.equals(">")) {
+//					if (index.mapIndex.get(term._objValue)==null)
+//						return  String.join("", Collections.nCopies(recordsCount, "0"));
+//					else {
+//						return index.mapIndex.get(term._objValue);
+//					}
+//				}
+//			}
+//		}
+//		
+//	}
+	
+	public Vector<Hashtable<String , Object>> select (Vector<SQLTerm> vecTerms,Vector<String> vecOperators){
+		System.out.println(mapPageLength);
+		vecTerms = evaluateIndexedColumns(vecTerms);
+		//loop on and
+		while(vecOperators.contains("AND")) {
+			int index = vecOperators.indexOf("AND");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index+1);
+			term1._evaluation=evaluateOperation(term1,term2,"AND");
+			vecOperators.remove(index);
+			vecTerms.remove(index+1);
+		}
+		//loop on xor
+		while(vecOperators.contains("XOR")) {
+			int index = vecOperators.indexOf("XOR");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index+1);
+			term1._evaluation=evaluateOperation(term1,term2,"XOR");
+			vecOperators.remove(index);
+			vecTerms.remove(index+1);
+		}
+		//loop on or
+		while(vecOperators.contains("OR")) {
+			int index = vecOperators.indexOf("OR");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index+1);
+			System.out.println(term1 +"  "+term2);
+			term1._evaluation=evaluateOperation(term1,term2,"OR");
+			System.out.println(term1._evaluation);
+			vecOperators.remove(index);
+			vecTerms.remove(index+1);
+		}
+		String result = vecTerms.get(0)._evaluation;
+		Vector<Hashtable<String, Object>> vecResult =new Vector<>();
+		for(int i=0;i<result.length();i++) {
+			if(result.charAt(i)=='1') {
+				RecordLocation loc = getLocation(i);
+				System.out.println(loc.pageNumber+"  "+loc.recordNumber );
+				vecResult.add(loadPage(loc.pageNumber).getByIndex(loc.recordNumber));
+			}
+		}
+		return vecResult;
+	}
+		//loop and evaluate those who have index   (fill the extra attribute)
+	public Vector <SQLTerm> evaluateIndexedColumns (Vector <SQLTerm>  allTerms){
+		Vector<RecordLocation> occurences = new Vector <RecordLocation>();
+		Vector <SQLTerm> evaluated =new Vector <SQLTerm>();
+		String evaluation="";
+		for (SQLTerm term :allTerms) {
+			for (BitMapIndex index : vecIndecies) {
+				if (term._strColumnName.equals(index.strColName)) {
+					evaluation=index.getBitStream((Comparable)term._objValue,term._strOperator); //mmkn teragga3 string bardo 5alli balak
+					//evaluation=this.locationsToBitStream(occurences);
+					term._evaluation=evaluation;
+				}
+				else {
+					term._evaluation="";
+				}
+			}
+			evaluated.add(term);
+		}
+		return evaluated;
+		
+		
+	}
+	
+	
+	public String locationsToBitStream (Vector<RecordLocation> occurences) {
+		String zeros=String.join("", Collections.nCopies(recordsCount, "0"));
+		for (RecordLocation occurence:occurences) 
+			zeros=zeros.substring(0, occurence.pageNumber+occurence.recordNumber)+'1'+zeros.substring(occurence.pageNumber+occurence.recordNumber+1);
+		return zeros;
+	}
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------	
+public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op) {
+	//el etnein malhomsh index
+	String term1Evaluation="";
+	String term2Evaluation="";
+	String result = "";
+	if(term1._evaluation.equals("") && term2._evaluation.equals("")) {
+		if (op.equals("AND")) {
+			term1Evaluation=this.getBitStreamForNonIndexed(term1);
+			for (int i =0 ;i<term1Evaluation.length();i++){
+				if (term1Evaluation.charAt(i)=='1'){
+					RecordLocation loc = getLocation(i);
+					Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
+					if (satisfy(htbl,term2)){
+						result+='1';
+					}
+					else{
+						result+='0';
+					}
+				}
+				else{
+					result+='0';
+				}
+			}
+		}
+		else if (op.equals("XOR")) {
+			term1Evaluation=this.getBitStreamForNonIndexed(term1);
+			for (int i =0 ;i<term1Evaluation.length();i++){
+				RecordLocation loc = getLocation(i);
+				Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
+				if (term1Evaluation.charAt(i)=='1'){
+					if (satisfy(htbl,term2)){
+						result+='0';
+					}
+					else{
+						result+='1';
+					}
+				}
+				else{
+					if (satisfy(htbl,term2)){
+						result+='1';
+					}
+					else{
+						result+='0';
+					}
+				}
+			}
+		}
+		else if (op.equals("OR")) {
+			term1Evaluation=this.getBitStreamForNonIndexed(term1);
+			term2Evaluation=this.getBitStreamForNonIndexed(term2);
+			result=orOperation(term1Evaluation, term2Evaluation);
+		}
+	}
+	// el etnein lehom index
+	else if(!term1._evaluation.equals("") && !term2._evaluation.equals("")) {
+		term1Evaluation = term1._evaluation;
+		term2Evaluation = term2._evaluation;
+		if (op.equals("AND")) {
+			result=andOperation(term1Evaluation, term2Evaluation);
+		}
+		else if (op.equals("XOR")) {
+			result=xorOperation(term1Evaluation, term2Evaluation);
+		}
+		else if (op.equals("OR")) {
+			result=orOperation(term1Evaluation, term2Evaluation);
+		}
+	}
+	// wa7ed fehom leh
+	else {
+		String HasIndex;
+		SQLTerm termNoIndex;
+		if(!term1._evaluation.equals("")){
+			HasIndex = term1._evaluation;
+			termNoIndex = term2;
+		}
+		else{
+			HasIndex = term2._evaluation;
+			termNoIndex = term1;
+		}
+		if (op.equals("AND")) {
+			for (int i =0 ;i<HasIndex.length();i++){
+				if (HasIndex.charAt(i)=='1'){
+					RecordLocation loc = getLocation(i);
+					Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
+					if (satisfy(htbl,termNoIndex)){
+						result+='1';
+					}
+					else{
+						result+='0';
+					}
+				}
+				else{
+					result+='0';
+				}
+			}
+		}
+		else if (op.equals("XOR")) {
+			for (int i =0 ;i<HasIndex.length();i++){
+				RecordLocation loc = getLocation(i);
+				Hashtable <String,Object> htbl = loadPage(loc.pageNumber).getByIndex(loc.recordNumber);
+				if (HasIndex.charAt(i)=='1'){
+					if (satisfy(htbl,termNoIndex)){
+						result+='0';
+					}
+					else{
+						result+='1';
+					}
+				}
+				else{
+					if (satisfy(htbl,termNoIndex)){
+						result+='1';
+					}
+					else{
+						result+='0';
+					}
+				}
+			}		
+		}
+		else if (op.equals("OR")) {
+			result=orOperation(HasIndex, this.getBitStreamForNonIndexed(termNoIndex));
+		}
+	}
+	return result;
+}
+
+
+public String getBitStreamForNonIndexed(SQLTerm term) {
+	String bitStream="";
+	for (int i = 0; i < id; i++) {
+		Page page = loadPage(i);
+		if (page == null)
+			continue;
+			bitStream +=page.generateBitStream(term); // in each page delete records matching with the query
+	}
+return bitStream;
+
+}
+
+
+//public RecordLocation getLocation(int ind){
+//	int recordNumber=0;
+//	for (int i = 0; i < mapPageLength.size(); i++) {
+//		for (int j = 0; j < mapPageLength.get(i); j++) {
+//			recordNumber++;
+//			if (recordNumber==ind) {
+//				return (new RecordLocation(i,j));
+//			}
+//		}
+//		recordNumber = 0;
+//	}
+//	return null;
+//
+//}
+public RecordLocation getLocation(int ind){
+	int recordNumber=0;
+	int count = 0;
+	for(Map.Entry<Integer,Integer> entry : mapPageLength.entrySet()) {
+		Integer pageNumber = entry.getKey();
+		Integer pageCount = entry.getValue(); 
+		if(count+pageCount>ind) return new RecordLocation(pageNumber, ind-count);
+		count+= pageCount;
+	}
+	
+	return null;
+
+}
+
+
+public static String orOperation(String s1,String s2) {
+	String res="";
+	for(int i=0;i<s1.length();i++) {
+		if(s1.charAt(i)=='1'||s2.charAt(i)=='1')res+="1";
+		else res+="0";
+	}
+	return res;
+}
+
+
+public static String andOperation(String s1,String s2) {
+	String res="";
+	for(int i=0;i<s1.length();i++) {
+		if(s1.charAt(i)=='1'&&s2.charAt(i)=='1')res+="1";
+		else res+="0";
+	}
+	return res;
+}
+
+
+public static String xorOperation(String s1,String s2) {
+	String res="";
+	for(int i=0;i<s1.length();i++) {
+		if((s1.charAt(i)=='1'&&s2.charAt(i)=='0')||(s1.charAt(i)=='0'&&s2.charAt(i)=='1'))res+="1";
+		else res+="0";
+	}
+	return res;
+}
+
+
+public static boolean satisfy(Hashtable<String,Object>htbl,SQLTerm term)
+{
+	String operator = term._strOperator;
+	Comparable value = (Comparable) htbl.get(term._strColumnName);
+	if(operator.equals("<")){
+		return (value.compareTo(term._objValue)<0);
+	}
+	else if(operator.equals(">")){
+		return (value.compareTo(term._objValue)>0);
+	}
+	else if(operator.equals("=")){
+		return (value.compareTo(term._objValue)==0);
+	}
+	else if(operator.equals("<=")){
+		return (value.compareTo(term._objValue)<=0);
+	}
+	else if(operator.equals(">=")){
+		return (value.compareTo(term._objValue)>=0);
+	}
+	else{
+		return (value.compareTo(term._objValue)!=0);
+	}
+
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------
+	
+	// class table 
+	//public String evaluateOperation(SQLTerm term1,SQLTerm term2,String op)   bet evaluate etnein terms
+	//public String getBitStreamForNonIndexed(SQLTerm term) 
+	
+	//class page 
+	//public String generateBitStream (Hashtable<String, Object> htblSearching) { bta5od el record elli hwa 3obara 3n column wa7ed w tragga3 bit stream leh
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

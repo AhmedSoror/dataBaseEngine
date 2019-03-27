@@ -1,4 +1,5 @@
 import java.util.Hashtable;
+import java.util.Iterator;
 
 public class DBAppTest {
 
@@ -104,20 +105,41 @@ public class DBAppTest {
 //*/
 //		delete 
 		//--4
-		htblColNameValue.clear();
-		htblColNameValue.put("name", new String("John Noor"));
-		test.deleteFromTable(strTableName, htblColNameValue);
-
-//		update
-		//--4
-		htblColNameValue.clear();
-		htblColNameValue.put("name", new String("new Name"));
-		test.updateTable(strTableName, "10", htblColNameValue);
-
-		htblColNameValue.clear();
-		htblColNameValue.put("id", new Integer(40));
-		test.updateTable(strTableName, "100", htblColNameValue);
+//		htblColNameValue.clear();
+//		htblColNameValue.put("name", new String("John Noor"));
+//		test.deleteFromTable(strTableName, htblColNameValue);
+//
+////		update
+//		//--4
+//		htblColNameValue.clear();
+//		htblColNameValue.put("name", new String("new Name"));
+//		test.updateTable(strTableName, "10", htblColNameValue);
+//
+//		htblColNameValue.clear();
+//		htblColNameValue.put("id", new Integer(40));
+//		test.updateTable(strTableName, "100", htblColNameValue);
+//		
 		
+		SQLTerm[] arrSQLTerms;
+		arrSQLTerms = new SQLTerm[2];
+		arrSQLTerms[0]=new SQLTerm();
+		arrSQLTerms[1]=new SQLTerm();
+		arrSQLTerms[0]._strTableName = "Student";
+		arrSQLTerms[0]._strColumnName="name";
+		arrSQLTerms[0]._strOperator ="=";
+		arrSQLTerms[0]._objValue="John Noor";
+		
+		arrSQLTerms[1]._strTableName = "Student";
+		arrSQLTerms[1]._strColumnName="gpa";
+		arrSQLTerms[1]._strOperator ="=";
+		arrSQLTerms[1]._objValue=new Double( 1.5 );
+		String[]strarrOperators = new String[1];
+		strarrOperators[0] = "OR";
+		Iterator resultSet = test.selectFromTable(arrSQLTerms , strarrOperators);
+		
+		while(resultSet.hasNext()) {
+			System.out.println(resultSet.next());
+		}
 	}
 
 }
