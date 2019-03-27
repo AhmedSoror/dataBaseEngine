@@ -592,7 +592,7 @@ public class Table implements Serializable {
 			}
 			int bitSreamIndex=getBitSreamIndex(htblColNameValue,pageIndex);
 			index.insertIndex(htblColNameValue, bitSreamIndex);
-//			System.out.println("table 593 index:  "+index);
+			System.out.println("table 593 index:  "+index);
 		}
 		System.out.println(mapPageLength);
 	}

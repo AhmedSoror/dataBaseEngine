@@ -23,7 +23,7 @@ public class DBAppTest {
 		htblColNameValue1.put("gpa", new Double(3.14));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 
-		test.createBitmapIndex(strTableName1, "id");
+//		test.createBitmapIndex(strTableName1, "id");
 		test.createBitmapIndex(strTableName1, "name");
 //--2
 		htblColNameValue1.clear();
