@@ -41,24 +41,26 @@ public class DBAppTest {
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 //--5
 		htblColNameValue1.clear();
-		htblColNameValue1.put("id", new Integer(60));
+		htblColNameValue1.put("id", new Integer(50));
 		htblColNameValue1.put("name", new String("John Noor"));
 		htblColNameValue1.put("gpa", new Double(0.98));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 
+		test.createBitmapIndex(strTableName1, "id");
 //--6		
 		htblColNameValue1.clear();
-		htblColNameValue1.put("id", new Integer(150));
+		htblColNameValue1.put("id", new Integer(60));
 		htblColNameValue1.put("name", new String("Zaky Noor"));
 		htblColNameValue1.put("gpa", new Double(0.88));
 		test.insertIntoTable(strTableName1, htblColNameValue1);
 		
+//		System.out.println(test);
 
+		/*
 		htblColNameValue1.clear();
 		htblColNameValue1.put("name", new String("Ali Noor"));
 		test.deleteFromTable(strTableName1, htblColNameValue1);
 
-		test.createBitmapIndex(strTableName1, "name");
 
 		String strTableName = "Employee";
 		Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
@@ -101,7 +103,8 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Zaky Noor"));
 		htblColNameValue.put("gpa", new Double(0.88));
 		test.insertIntoTable(strTableName, htblColNameValue);
-//*/
+
+
 //		delete 
 		//--4
 		htblColNameValue.clear();
@@ -117,7 +120,7 @@ public class DBAppTest {
 		htblColNameValue.clear();
 		htblColNameValue.put("id", new Integer(40));
 		test.updateTable(strTableName, "100", htblColNameValue);
-		
+		*/
 	}
 
 }

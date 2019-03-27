@@ -295,7 +295,7 @@ public class Page implements Serializable {
 	
 	public void updateByIndex(int ind, Hashtable<String, Object> htblUpdate)	throws DBAppException {
 		Hashtable<String, Object> htblRecord = vecData.get(ind);
-			update_helper(htblRecord, htblUpdate);
+		update_helper(htblRecord, htblUpdate);
 
 	}
 	

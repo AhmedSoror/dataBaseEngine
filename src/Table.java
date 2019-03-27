@@ -1,5 +1,6 @@
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
@@ -8,6 +9,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.prefs.PreferenceChangeEvent;
+
+import javax.swing.text.html.HTMLDocument.HTMLReader.PreAction;
 
 public class Table implements Serializable {
 	private String strTableName;
@@ -92,7 +96,7 @@ public class Table implements Serializable {
 		insert_helper(pageIndex + 1, lastRecord);
 	}
 	*/
-	
+	/*
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
 		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
 			throw new DBAppException("clustering key must be entered");
@@ -115,6 +119,7 @@ public class Table implements Serializable {
 			}
 		}
 	}
+	*/
 
 //	-----------------------------------------------( Delete )-------------------------------------------------------------------------------------------
 
@@ -213,10 +218,6 @@ public class Table implements Serializable {
 			}
 		}
 		index.writeIndex();
-		System.out.println("Table l215 "+index.mapIndex);
-		System.out.println("Table l217 "+mapPageLength);
-		 Vector <RecordLocation> newVec=findPageUsingIndex("name", new String("John Noor")) ;
-		 System.out.println(newVec);
 	}
 		
 		
@@ -423,12 +424,10 @@ public class Table implements Serializable {
 		mapPageLength.put(pageIndex, page.size());
 		insert_helper(pageIndex + 1, lastRecord);
 	}
-	/*
-	 test on page with empty fields
-	 
-	 */
+	
 		
-	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {
+	public Vector <RecordLocation> findPageUsingIndex(String strColumnName, Object objColumnValue) {  //	 test on page with empty fields
+
 		String bitStream = "";
 		int pageNumber = 0;
 		int recordNumber = 0;
@@ -457,6 +456,89 @@ public class Table implements Serializable {
 
 		return occurences;
 	}
+	public static int findLastOne(String bitStream) {
+		for(int i=bitStream.length()-1;i>=0;i--) {
+			if(bitStream.charAt(i)=='1')
+				return i+1;
+		}
+		return -1;
+	}
 	
-	
+	public int findInsertPage(Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		BitMapIndex clusterKeyIndex=null;
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				clusterKeyIndex=index;
+				break;
+			}
+		}
+		if(clusterKeyIndex.mapIndex.containsKey(htblColNameValue.get(strClusteringKeyColumn))) {
+			throw new DBAppException("Primary Key exists");
+		}
+		
+		Set<Comparable> list=clusterKeyIndex.mapIndex.keySet();
+	    int x=Arrays.binarySearch(list.toArray(), 45);
+	    x=x<0?x*-1-2:x;
+	    Comparable prviosRecord=(Comparable) list.toArray()[x];
+	    
+	    Vector <RecordLocation> vecRecordLocation=findPageUsingIndex(strClusteringKeyColumn, prviosRecord);
+	    
+	    int pageNumber=vecRecordLocation.get(vecRecordLocation.size()-1).pageNumber;
+		
+	    
+	    insertIndex(clusterKeyIndex, prviosRecord,(Comparable) htblColNameValue.get(strClusteringKeyColumn));
+	    
+	    
+	    return pageNumber;
+		
+	}
+	public void insertIndex(BitMapIndex clusterKeyIndex, Comparable prviosRecord,Comparable insertedRecordValue) {
+		
+		String prviosRecordBits=clusterKeyIndex.mapIndex.get(prviosRecord);
+	    int bitSreamIndex=findLastOne( prviosRecordBits);
+	    clusterKeyIndex.insert(bitSreamIndex);
+	    String zeros=String.join("", Collections.nCopies(prviosRecordBits.length(), "0"));
+	    String insertedIndex=zeros.substring(0, bitSreamIndex)+"1"+zeros.substring(bitSreamIndex);
+	    clusterKeyIndex.mapIndex.put(insertedRecordValue, insertedIndex);
+		
+	}
+	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException {
+		if(htblColNameValue.get(strClusteringKeyColumn)==null) {
+			throw new DBAppException("clustering key must be entered");
+		}
+		htblColNameValue.put("TouchDate", new Date());
+
+		int pageIndex ;
+		boolean indexOnClusterKey=false;					// references index on cluster key
+		for(BitMapIndex index:vecIndecies) {
+			if(index.strColName.equals(strClusteringKeyColumn)) {
+				indexOnClusterKey=true;
+				break;
+			}
+		}
+		if(indexOnClusterKey) {
+			
+			pageIndex = findInsertPage(htblColNameValue);			
+		}
+		else {
+			pageIndex = findPage(htblColNameValue);
+		}
+		
+		if (pageIndex != -1) {
+			insert_helper(pageIndex, htblColNameValue);
+			
+		} else {
+			Page newPage;
+			try {
+				newPage = new Page(strClusteringKeyColumn);
+				newPage.insert(htblColNameValue);
+				mapPageLength.put(id,1);				//*********************( New )*********************
+				writePage(newPage, id++);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("error in properties file");
+			}
+		}
+		System.out.println("Table 520: "+mapPageLength);
+	}
 }

@@ -64,9 +64,30 @@ public class BitMapIndex extends Table {
 		
 	}
 	
+   public void insert(int stringIndex){
+	   mapIndex.forEach((key, value)->
+	   			mapIndex.put(key,editBits(value,stringIndex))
+		);
+	   
+   }
+
+   public static String editBits(String s,int stringIndex) {
+		int x=stringIndex;
+	    String r=s.substring(0,x)+"0"+s.substring(x);
+	    return r;
+	}
+	
+   
+   
+   
+   
+   
 	
 	public static boolean hasNoValues(String s) {
 		return s.matches("0*");
 	}
 	
+	public String toString() {
+		return strColName+" "+mapIndex.toString();
+	}
 }
