@@ -164,15 +164,17 @@ public class Page implements Serializable {
 		}
 		return true;
 	}
-	public void delete(Hashtable<String, Object> htblQuery) {
-
+	public Vector<Integer> delete(Hashtable<String, Object> htblQuery) {
+		Vector<Integer> vecDeletedInd = new Vector<>();
 		for (int i = vecData.size() - 1; i >= 0; i--) {
 			Hashtable<String, Object> htblRecord = vecData.get(i);
 			boolean deleteRecord = recordMatching(htblQuery, htblRecord);
 			if (deleteRecord) {
 				vecData.remove(i);
+				vecDeletedInd.add(i);
 			}
 		}
+		return vecDeletedInd;
 	}
 	
 //	-------------------------------------------------(Get special record)--------------------------------------------------------------------------------	
@@ -295,8 +297,12 @@ public class Page implements Serializable {
 	
 	public void updateByIndex(int ind, Hashtable<String, Object> htblUpdate)	throws DBAppException {
 		Hashtable<String, Object> htblRecord = vecData.get(ind);
-		update_helper(htblRecord, htblUpdate);
+			update_helper(htblRecord, htblUpdate);
 
+	}
+
+	public Hashtable getByIndex(int ind){
+		return vecData.get(ind);
 	}
 //	-------------------------------------------------------------(New Methods)-------------------------------------------------------------------------------------
 	public int getRecordOrder(Hashtable<String, Object> htblRecord) {
@@ -310,6 +316,64 @@ public class Page implements Serializable {
 			count++;
 		}
 		return count;
-	}
+}
+	
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public String generateBitStream (SQLTerm term) {
+		String bitStream="";
+		for (Hashtable htbl : vecData){
+			if(satisfy(htbl,term))bitStream+="1";
+			else bitStream+="0";
+		}
+		return bitStream;
+	}
+	public static boolean satisfy(Hashtable<String,Object>htbl,SQLTerm term)
+	{
+		String operator = term._strOperator;
+		Comparable value = (Comparable) htbl.get(term._strColumnName);
+		if(operator.equals("<")){
+			return (value.compareTo(term._objValue)<0);
+		}
+		else if(operator.equals(">")){
+			return (value.compareTo(term._objValue)>0);
+		}
+		else if(operator.equals("=")){
+			return (value.compareTo(term._objValue)==0);
+		}
+		else if(operator.equals("<=")){
+			return (value.compareTo(term._objValue)<=0);
+		}
+		else if(operator.equals(">=")){
+			return (value.compareTo(term._objValue)>=0);
+		}
+		else{
+			return (value.compareTo(term._objValue)!=0);
+		}
+
+	}
 }

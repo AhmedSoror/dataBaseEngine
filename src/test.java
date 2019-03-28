@@ -1,23 +1,24 @@
 import java.security.KeyStore.Entry;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
 
 public class test {
 	public static void main(String[] args) {
 		 
-        TreeMap<Comparable, String> mapIndex = new TreeMap<Comparable, String>(); 
+        TreeMap<String, String> mapIndex = new TreeMap<String, String>(); 
  
-        mapIndex.put("Ali Noor", "10000");
-        mapIndex.put("Dalia Noor", "01000");
-//        mapIndex.put("Ahmed Noor", "00100");
-//        mapIndex.put(40, "00010");
-//        mapIndex.put(50, "00001");
+//        mapIndex.put("USA", "0123456789");
+//        mapIndex.put("India", "0123456789");
+//        mapIndex.put("UK", "0123456789");
+//        mapIndex.put("Japan", "0123456789");
+//        mapIndex.put("UAE", "0123456789");
   
 //        System.out.println(mapIndex);
 //        int bitNumber=0;
@@ -34,7 +35,24 @@ public class test {
 //        System.out.println(tm);
 //        
 //        System.out.println(tm);
+        
+//        Vector<Integer> v = new Vector<>();
+//        v.add(3);
+//        v.add(5);
+//        v.add(2);
 //        
+//        Iterator rs =v.iterator();
+//        while(rs.hasNext()) {
+//        	System.out.println(rs.next());
+//        }
+        /*
+         Integer[] a =new Integer[3];
+        a[0]=1;
+        a[1]=3;
+        a[2]=2;
+        Vector<Integer> vec = new Vector(Arrays.asList(a));
+        System.out.println(vec);
+        */
         /*
         System.out.println(mapIndex);
 
@@ -60,58 +78,56 @@ public class test {
         insertIndex( new Integer(40), new Integer(45), mapIndex);
         System.out.println(mapIndex);
         */
-        
+        /*
         System.out.println(mapIndex);
         Set<Comparable> list=mapIndex.keySet();
         int x=Arrays.binarySearch(list.toArray(), "Ahmed Noor");
         x=x<0?x*-1-2:x;
         System.out.println(x);
+        */
+        System.out.println(Encrypt("00100111"));
+        String[]arr=Encrypt("00100111").split(" ");
+        System.out.println(Arrays.toString(arr));
+        System.out.println(Decrypt(Encrypt("00100111")));
         
-        
 	}
-
-	public static void insertIndex( Comparable prviosRecord, Comparable insertedRecordValue,TreeMap<Comparable,String> mapIndex) {
-
-		String prviosRecordBits = mapIndex.get(prviosRecord);
-		int bitSreamIndex = findLastOne(prviosRecordBits);
-		insert(bitSreamIndex,mapIndex);
-		String zeros = String.join("", Collections.nCopies(prviosRecordBits.length(), "0"));
-		String insertedIndex = zeros.substring(0, bitSreamIndex) + "1" + zeros.substring(bitSreamIndex);
-		mapIndex.put(insertedRecordValue, insertedIndex);
-
-	}
-
-	   public static void insert(int stringIndex,TreeMap<Comparable, String> mapIndex){
-		   mapIndex.forEach((key, value)->
-		   			mapIndex.put(key,editBits(value,stringIndex))
-			);
-	   }
-
-	   public static  String editBits(String s,int stringIndex) {
-			int x=stringIndex;
-		    String r=s.substring(0,x)+"0"+s.substring(x);
-		    return r;
-		}
-		
-	
-	public static  String editBits(String s) {
-		int x=findLastOne( s);
-	    String r=s.substring(0,x)+"0"+s.substring(x);
-	    return r;
-	}
-	
-	public static int findLastOne(String bitStream) {
-		for(int i=bitStream.length()-1;i>=0;i--) {
-			if(bitStream.charAt(i)=='1')
-				return i+1;
-		}
-		return -1;
-	}
-	
-	
 	public static boolean hasNoValues(String s) {
 		return s.matches("0*");
 	}
-	
+	public static String Encrypt(String bits) {
+		String r="";
+		int count=0;
+		char currentCharacter=bits.charAt(0);
+		char c=currentCharacter;
+		for(int i=0;i<bits.length();i++) {
+			if(bits.charAt(i)==currentCharacter) {
+				count++;
+			}
+			else {
+				 c=currentCharacter=='0'?'Z':'O';
+				currentCharacter=bits.charAt(i);
+				r+=count+"/"+c+" ";
+				count=1;
+			}
+		}
+		c=currentCharacter=='0'?'Z':'O';
+		r+=count+"/"+c+" ";
+		return r;
+	}
+	public static String Decrypt(String bits) {
+		String r="";
+		String[]arr=bits.split(" ");
+		for(int i=0;i<arr.length;i++) {
+			String[]split=arr[i].split("/");
+			int count=Integer.parseInt(split[0]);
+			if(split[1].equals("O")) {
+				r+=String.join("", Collections.nCopies(count, "1"));
+			}
+			else {
+				r+=String.join("", Collections.nCopies(count, "0"));
+			}
+		}
+		return r;
+	}
 	
 }

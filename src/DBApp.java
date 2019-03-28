@@ -123,10 +123,22 @@ public class DBApp {
 		writeTable(table);
 	}
 //	----------------------------------------------------------------( Iterator )----------------------------------------------------------------
-	/*
-	 * public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators)// throws DBAppException { return null; }
-	 */
 	
+	 public Iterator selectFromTable(SQLTerm[] arrSQLTerms,String[] strarrOperators) {// throws DBAppException { return null; }
+		 Vector<SQLTerm> vecTerms =new Vector();
+		 Vector<String> vecOperators =new Vector();
+		 for(SQLTerm term:arrSQLTerms) {
+			 vecTerms.add(term.copy());
+		 }
+		 for(String s:strarrOperators) {
+			 String sNew=s;
+			 vecOperators.add(sNew);
+		 }
+		 String strTableName = arrSQLTerms[0]._strTableName;
+		 Table t = loadTable(strTableName);
+		 Iterator<Hashtable<String, Object>>  result = t.select(vecTerms, vecOperators).iterator();
+		 return result;
+	 }
 //	-----------------------------------------------------( Write & Read table )----------------------------------------------------------------
 	
 	public boolean writeTable(Table table) { // ******** */

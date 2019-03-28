@@ -26,3 +26,210 @@ Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Da
 Student,gpa,java.lang.double,false,False
 Student,name,java.lang.String,false,False
 Student,id,java.lang.Integer,true,False
+<<<<<<< HEAD
+=======
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+Table Name, Column Name, Column Type, Key, IndexedStudent,TouchDate,java.util.Date,false,False
+Student,gpa,java.lang.double,false,False
+Student,name,java.lang.String,false,False
+Student,id,java.lang.Integer,true,False
+>>>>>>> 301d4494ed9a6adf2c1f64ac6868ad9528d4fb5a
