@@ -23,14 +23,14 @@ public class BitMapIndex extends Table {
 	}
 	
 //	------------------------------------------------------(Write to disk)------------------------------------------------------------------------------
+	/*
 	public void writeIndex() {
 		int i=0;
 		for(Page page:getVecPages()) {
 			writePage(page, i++);
 		}
-	
 	}
-	
+*/	
 	
 //	------------------------------------------------------(Added Methods)------------------------------------------------------------------------------
 	// public void deleteIndex(int bitNumber) {
@@ -162,6 +162,42 @@ public class BitMapIndex extends Table {
 		   }
 		}
 		
-	//-----------------------------------------------------------------------------------------------------------------------------------------
-
+	//----------------------------------------------------(Encryption)--------------------------------------------------------------------------
+		public static String Encrypt(String bits) {
+			String r="";
+			int count=0;
+			char currentCharacter=bits.charAt(0);
+			char c=currentCharacter;
+			for(int i=0;i<bits.length();i++) {
+				if(bits.charAt(i)==currentCharacter) {
+					count++;
+				}
+				else {
+					 c=currentCharacter=='0'?'Z':'O';
+					currentCharacter=bits.charAt(i);
+					r+=count+"/"+c+" ";
+					count=1;
+				}
+			}
+			c=currentCharacter=='0'?'Z':'O';
+			r+=count+"/"+c+" ";
+			return r;
+		}
+		public static String Decrypt(String bits) {
+			String r="";
+			String[]arr=bits.split(" ");
+			for(int i=0;i<arr.length;i++) {
+				String[]split=arr[i].split("/");
+				int count=Integer.parseInt(split[0]);
+				if(split[1].equals("O")) {
+					r+=String.join("", Collections.nCopies(count, "1"));
+				}
+				else {
+					r+=String.join("", Collections.nCopies(count, "0"));
+				}
+			}
+			return r;
+		}
+	   
+	   
 }
