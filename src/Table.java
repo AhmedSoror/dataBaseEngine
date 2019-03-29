@@ -9,12 +9,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.print.attribute.HashPrintJobAttributeSet;
+
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -106,20 +110,75 @@ public class Table implements Serializable {
 	 */
 //	-----------------------------------------------( Delete )-------------------------------------------------------------------------------------------
 
-	public void delete(Hashtable<String, Object> htblColNameValue) {
-		for (int i = id - 1; i >= 0; i--) {
-			Page page = loadPage(i);
-			if (page == null)
-				continue;
-			page.delete(htblColNameValue); // in each page delete records matching with the query
-			writePage(page, i);
-			mapPageLength.put(i, page.size());
-			if (page.isEmpty()) {
-				File file = new File("data/" + this.strTableName + " " + i + ".class");
-				file.delete();
+//	public void delete(Hashtable<String, Object> htblColNameValue) {
+//		for (int i = id - 1; i >= 0; i--) {
+//			Page page = loadPage(i);
+//			if (page == null)
+//				continue;
+//			page.delete(htblColNameValue); // in each page delete records matching with the query
+//			writePage(page, i);
+//			mapPageLength.put(i, page.size());
+//			if (page.isEmpty()) {
+//				File file = new File("data/" + this.strTableName + " " + i + ".class");
+//				file.delete();
+//			}
+//		}
+//	}
+	
+	//----------------------------------------(delete using select)------------------
+		public void delete(Hashtable<String, Object> htblColNameValue) {
+			//public SQLTerm(String strTableName,String strColumnName,String strOperator,	Object objValue)
+			//Set<String> keys = hm.keySet();
+			Set <String> columns =htblColNameValue.keySet();
+			int termsCounter=0;
+			Vector <SQLTerm> vecTerms=new Vector<SQLTerm>();
+			Vector <String> vecOps=new Vector<String>();
+			Vector <RecordLocation> locations = new Vector<RecordLocation>();
+			
+			//generate SQL terms
+			for (String columnName :columns){
+				try {
+				SQLTerm term;
+					term = new SQLTerm(this.strTableName,columnName,"=",htblColNameValue.get(columnName));
+				vecTerms.add(term);
+				} catch (DBAppException e) {
+					// TODO Auto-generated catch block
+					
+				}
+				termsCounter++;
 			}
+
+			//generate AND operations
+			for (int i=0 ;i<termsCounter-1;i++){
+				vecOps.add("AND");
+			}
+
+
+			locations=selectHelper(vecTerms,vecOps);
+
+			//delete Records in specific locations
+			for(RecordLocation location:locations){
+				Page page = loadPage(location.pageNumber);
+				page.deleteByIndex(location.recordNumber);
+				writePage(page, location.pageNumber);
+				mapPageLength.put(location.pageNumber, page.size());
+				if (page.isEmpty()) {
+					File file = new File("data/" + this.strTableName + " " + location.pageNumber + ".class");
+					file.delete();
+				}
+				recordsCount--;
+			}
+			
+			
+			//update all indecies of this table
+
+			for (BitMapIndex index :vecIndecies){
+				for(RecordLocation location:locations){
+					index.delete(antiGetLocation(location));
+				}
+			}
+			
 		}
-	}
 
 //	-----------------------------------------------( Update )-------------------------------------------------------------------------------------------
 	public String getPrimaryType() throws DBAppException { // return clustringKey type#name
@@ -147,18 +206,71 @@ public class Table implements Serializable {
 	}
 
 	public void update(String strKey, Hashtable<String, Object> htblColNameValue) throws DBAppException {
-		String s = this.getPrimaryType();
-		String[] primary = s.split("#");
-		String columnType = primary[0];
-		String columnName = primary[1];
-		for (int i = id - 1; i >= 0; i--) {
-			Page page = loadPage(i);
-			if (page == null)
-				continue;
-			page.update(columnType, columnName, strKey, htblColNameValue); // in each page update records matching with
-																			// the query
-			writePage(page, i);
+		SQLTerm term = new SQLTerm();
+		term._strTableName=this.strTableName;
+		term._strColumnName=this.strClusteringKeyColumn;
+		String colName=this.getPrimaryType();
+		try {
+			switch (colName) {
+				case "java.lang.Integer":
+					term._objValue = (Integer.parseInt(strKey));
+					break;
+				case "java.lang.String":
+					term._objValue = strKey;
+					break;
+				case "java.lang.Double":
+					term._objValue = (Double.parseDouble(strKey));
+					break;
+				case "java.lang.Boolean":
+					term._objValue = (Boolean.parseBoolean(strKey));
+					break;
+				case "java.lang.Date":
+					try {
+						term._objValue = new SimpleDateFormat("dd/MM/yyyy").parse(strKey);
+					} catch (Exception e) {
+						throw new DBAppException("date is not in the correct format");
+					}
+					break;
+					
+			}
+		} catch (Exception e) {
+			throw new DBAppException("Key type mismatch!");
 		}
+		term._strOperator="=";
+		Vector<SQLTerm> vecTerm = new Vector<>();
+		vecTerm.add(term);
+		Vector<RecordLocation> locations = selectHelper(vecTerm, new Vector<String>());
+		Vector<Hashtable<String , Object>> vecOldVals = new Vector<>();
+		for(RecordLocation loc : locations) {
+			Page page = loadPage(loc.pageNumber);
+			Hashtable<String , Object> record = (Hashtable<String , Object>)page.getByIndex(loc.recordNumber).clone();
+			record.put("_locationID", antiGetLocation(loc));
+			vecOldVals.add(record);
+			page.updateByIndex(loc.recordNumber, htblColNameValue);
+			writePage(page,loc.pageNumber);
+		}
+		
+		for(Hashtable<String , Object> record : vecOldVals) {
+			for(BitMapIndex index : vecIndecies) {
+				if(htblColNameValue.keySet().contains(index.strColName)) {
+					index.update((Integer)record.get("_locationID"), (Comparable)record.get(index.strColName), (Comparable)htblColNameValue.get(index.strColName));
+				}
+			}
+		}
+		
+		
+//		String s = this.getPrimaryType();
+//		String[] primary = s.split("#");
+//		String columnType = primary[0];
+//		String columnName = primary[1];
+//		for (int i = id - 1; i >= 0; i--) {
+//			Page page = loadPage(i);
+//			if (page == null)
+//				continue;
+//			page.update(columnType, columnName, strKey, htblColNameValue); // in each page update records matching with
+//																			// the query
+//			writePage(page, i);
+//		}
 	}
 
 //	-----------------------------------------------( Create Bitmap Index )-------------------------------------------------------------------------------------------
@@ -519,51 +631,51 @@ public class Table implements Serializable {
 //		}
 //		
 //	}
-
-	public Vector<Hashtable<String, Object>> select(Vector<SQLTerm> vecTerms, Vector<String> vecOperators) {
-		System.out.println(mapPageLength);
-		System.out.println("Table539  " + vecTerms);
-		vecTerms = evaluateIndexedColumns(vecTerms);
-		// loop on and
-		while (vecOperators.contains("AND")) {
-			int index = vecOperators.indexOf("AND");
-			SQLTerm term1 = vecTerms.get(index);
-			SQLTerm term2 = vecTerms.get(index + 1);
-			term1._evaluation = evaluateOperation(term1, term2, "AND");
-			vecOperators.remove(index);
-			vecTerms.remove(index + 1);
-		}
-		// loop on xor
-		while (vecOperators.contains("XOR")) {
-			int index = vecOperators.indexOf("XOR");
-			SQLTerm term1 = vecTerms.get(index);
-			SQLTerm term2 = vecTerms.get(index + 1);
-			term1._evaluation = evaluateOperation(term1, term2, "XOR");
-			vecOperators.remove(index);
-			vecTerms.remove(index + 1);
-		}
-		// loop on or
-		while (vecOperators.contains("OR")) {
-			int index = vecOperators.indexOf("OR");
-			SQLTerm term1 = vecTerms.get(index);
-			SQLTerm term2 = vecTerms.get(index + 1);
-			System.out.println(term1 + "  " + term2);
-			term1._evaluation = evaluateOperation(term1, term2, "OR");
-			System.out.println(term1._evaluation);
-			vecOperators.remove(index);
-			vecTerms.remove(index + 1);
-		}
-		String result = vecTerms.get(0)._evaluation;
-		Vector<Hashtable<String, Object>> vecResult = new Vector<>();
-		for (int i = 0; i < result.length(); i++) {
-			if (result.charAt(i) == '1') {
-				RecordLocation loc = getLocation(i);
-				System.out.println(loc.pageNumber + "  " + loc.recordNumber);
-				vecResult.add(loadPage(loc.pageNumber).getByIndex(loc.recordNumber));
-			}
-		}
-		return vecResult;
-	}
+//
+//	public Vector<Hashtable<String, Object>> select(Vector<SQLTerm> vecTerms, Vector<String> vecOperators) {
+//		System.out.println(mapPageLength);
+//		System.out.println("Table539  " + vecTerms);
+//		vecTerms = evaluateIndexedColumns(vecTerms);
+//		// loop on and
+//		while (vecOperators.contains("AND")) {
+//			int index = vecOperators.indexOf("AND");
+//			SQLTerm term1 = vecTerms.get(index);
+//			SQLTerm term2 = vecTerms.get(index + 1);
+//			term1._evaluation = evaluateOperation(term1, term2, "AND");
+//			vecOperators.remove(index);
+//			vecTerms.remove(index + 1);
+//		}
+//		// loop on xor
+//		while (vecOperators.contains("XOR")) {
+//			int index = vecOperators.indexOf("XOR");
+//			SQLTerm term1 = vecTerms.get(index);
+//			SQLTerm term2 = vecTerms.get(index + 1);
+//			term1._evaluation = evaluateOperation(term1, term2, "XOR");
+//			vecOperators.remove(index);
+//			vecTerms.remove(index + 1);
+//		}
+//		// loop on or
+//		while (vecOperators.contains("OR")) {
+//			int index = vecOperators.indexOf("OR");
+//			SQLTerm term1 = vecTerms.get(index);
+//			SQLTerm term2 = vecTerms.get(index + 1);
+//			System.out.println(term1 + "  " + term2);
+//			term1._evaluation = evaluateOperation(term1, term2, "OR");
+//			System.out.println(term1._evaluation);
+//			vecOperators.remove(index);
+//			vecTerms.remove(index + 1);
+//		}
+//		String result = vecTerms.get(0)._evaluation;
+//		Vector<Hashtable<String, Object>> vecResult = new Vector<>();
+//		for (int i = 0; i < result.length(); i++) {
+//			if (result.charAt(i) == '1') {
+//				RecordLocation loc = getLocation(i);
+//				System.out.println(loc.pageNumber + "  " + loc.recordNumber);
+//				vecResult.add(loadPage(loc.pageNumber).getByIndex(loc.recordNumber));
+//			}
+//		}
+//		return vecResult;
+//	}
 
 	// loop and evaluate those who have index (fill the extra attribute)
 	public Vector<SQLTerm> evaluateIndexedColumns(Vector<SQLTerm> allTerms) {
@@ -738,6 +850,20 @@ public class Table implements Serializable {
 //	return null;
 //
 //}
+	public int antiGetLocation(RecordLocation loc) {
+		int recordNumber = 0;
+		int count = 0;
+		int sum=0;
+		for (Map.Entry<Integer, Integer> entry : mapPageLength.entrySet()) {
+			Integer pageNumber = entry.getKey();
+			Integer pageCount = entry.getValue();
+			if(pageNumber==loc.pageNumber) {sum+=loc.recordNumber; break;}
+			else sum+=pageCount;
+		}
+		return sum;
+	}
+	
+	
 	public RecordLocation getLocation(int ind) {
 		int recordNumber = 0;
 		int count = 0;
@@ -748,9 +874,7 @@ public class Table implements Serializable {
 				return new RecordLocation(pageNumber, ind - count);
 			count += pageCount;
 		}
-
 		return null;
-
 	}
 
 	public static String orOperation(String s1, String s2) {
@@ -805,6 +929,70 @@ public class Table implements Serializable {
 
 	}
 
+	//------------------------------------(Select and SelectHelper)---------------------
+
+
+	//------(Select)------------------------
+	public Vector<Hashtable<String,Object>> select(Vector<SQLTerm> vecTerms, Vector<String> vecOperators) {
+		Vector<RecordLocation> locations;
+		Vector<Hashtable<String,Object>> vecResult = new Vector<Hashtable<String,Object>>();
+		locations=this.selectHelper(vecTerms,vecOperators);
+		for (RecordLocation location:locations){
+			vecResult.add(loadPage(location.pageNumber).getByIndex(location.recordNumber));
+		}
+		return vecResult;
+	}
+	//-------(SelectHelper)--------------------
+	public Vector<RecordLocation> selectHelper(Vector<SQLTerm> vecTerms, Vector<String> vecOperators) {
+		System.out.println(mapPageLength);
+		System.out.println("Table539  " + vecTerms);
+		vecTerms = evaluateIndexedColumns(vecTerms);
+		if(vecTerms.size()==1) {
+			if(vecTerms.get(0)._evaluation.equals("")) {
+				vecTerms.get(0)._evaluation=getBitStreamForNonIndexed(vecTerms.get(0));
+			}
+		}
+		// loop on and
+		while (vecOperators.contains("AND")) {
+			int index = vecOperators.indexOf("AND");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index + 1);
+			term1._evaluation = evaluateOperation(term1, term2, "AND");
+			vecOperators.remove(index);
+			vecTerms.remove(index + 1);
+		}
+		// loop on xor
+		while (vecOperators.contains("XOR")) {
+			int index = vecOperators.indexOf("XOR");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index + 1);
+			term1._evaluation = evaluateOperation(term1, term2, "XOR");
+			vecOperators.remove(index);
+			vecTerms.remove(index + 1);
+		}
+		// loop on or
+		while (vecOperators.contains("OR")) {
+			int index = vecOperators.indexOf("OR");
+			SQLTerm term1 = vecTerms.get(index);
+			SQLTerm term2 = vecTerms.get(index + 1);
+			System.out.println(term1 + "  " + term2);
+			term1._evaluation = evaluateOperation(term1, term2, "OR");
+			System.out.println(term1._evaluation);
+			vecOperators.remove(index);
+			vecTerms.remove(index + 1);
+		}
+		String result = vecTerms.get(0)._evaluation;
+		Vector<RecordLocation> vecResult = new Vector<>();
+		for (int i = 0; i < result.length(); i++) {
+			if (result.charAt(i) == '1') {
+				RecordLocation loc = getLocation(i);
+				System.out.println(loc.pageNumber + "  " + loc.recordNumber);
+				//vecResult.add(loadPage(loc.pageNumber).getByIndex(loc.recordNumber));
+				vecResult.add(loc);
+			}
+		}
+		return vecResult;
+	}
 //--------------------------------------------------------------------------------
 
 	// class table
